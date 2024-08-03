@@ -96,7 +96,9 @@ public class BusRouteController {
 			String encodedStartStationId = URLEncoder.encode(startStationId, StandardCharsets.UTF_8.toString()); //검색한 startStationId 인코딩
             String apiUrl = "https://open.jejudatahub.net/api/proxy/aaatD6D1atta1611at1t6a1b6at1b11a/" +
             jejuApiKey + "?" +
-            "startStationId" + encodedStartStationId;
+            "startStationId" + encodedStartStationId +						
+            "&number=1" +
+            "&limit=100";
 
             URL url = new URL(apiUrl);
 			HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -129,6 +131,7 @@ public class BusRouteController {
 				newItem.put("routeNumber", dataNode.path("routeNumber").asText());
 				newItem.put("startStationName", dataNode.path("startStationName").asText());
 				newItem.put("endStationName", dataNode.path("endStationName").asText());
+				newItem.put("startStationId", dataNode.path("startStationId").asText());
 				filteredData.add(newItem);
 			}
 
