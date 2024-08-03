@@ -97,7 +97,9 @@ public class PublicWifiController {
 			String encodedApGroupName = URLEncoder.encode(apGroupName, StandardCharsets.UTF_8.toString()); //검색한 apGroupName 인코딩
             String apiUrl = "https://open.jejudatahub.net/api/proxy/Dtb18ta1btbD1Da1a81aaDttab6tDabb/" +
             jejuApiKey + "?" +
-            "apGroupName=" + encodedApGroupName ;
+            "apGroupName=" + encodedApGroupName +						
+            "&number=1" +
+            "&limit=100";
 
             URL url = new URL(apiUrl);
 			HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();

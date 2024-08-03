@@ -95,7 +95,9 @@ public class BusStopController {
 			String encodedStationName = URLEncoder.encode(stationName, StandardCharsets.UTF_8.toString()); //검색한 stationName 인코딩
             String apiUrl = "https://open.jejudatahub.net/api/proxy/DD11ab6a6t11D16baaa1a2tD26ata161/" +
             jejuApiKey + "?" +
-			"stationName=" + encodedStationName ;
+			"stationName=" + encodedStationName +						
+            "&number=1" +
+            "&limit=100";
 
             URL url = new URL(apiUrl);
 			HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
