@@ -45,7 +45,7 @@ public class ApiResponse<T> {
 	 * 성공적으로 API 호출이 완료되었을 때 반환 (데이터 없음)
 	 * @return ApiResponse<?>
 	 */
-	public static ApiResponse<?> createSuccessWithNoContent() {
+	public static ApiResponse<?> createSuccessWithNoContent(String s) {
 		return new ApiResponse<>(Status.SUCCESS, null, null);
 	}
 
