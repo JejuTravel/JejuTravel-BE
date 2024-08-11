@@ -11,10 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.jejutravel.domain.Dto.AreaResponse;
 import com.example.jejutravel.global.api.PageResponse;
-import com.example.jejutravel.domain.Dto.content.TourismInfoResponse;
 import com.example.jejutravel.domain.Dto.content.ContentListResponse;
+import com.example.jejutravel.domain.Dto.content.ShoppingInfoResponse;
 import com.example.jejutravel.global.api.ApiResponse;
 import com.example.jejutravel.service.OpenApiManager;
 
@@ -23,19 +22,20 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @Slf4j
-@RequestMapping("/api/v1")
+@RequestMapping("api/v1")
 @RequiredArgsConstructor
-public class TourismController {
+public class ShoppingController {
 
 	@Value("${tourism.api.key}")
 	private String apiKey;
 
 	private final OpenApiManager openApiManager;
 
-	@GetMapping("/tourism")
-	public ApiResponse<PageResponse<ContentListResponse>> getTourismList(
+	@GetMapping("/shopping")
+	public ApiResponse<PageResponse<ContentListResponse>> getShoppingList(
 		@RequestParam(value = "pageNo", defaultValue = "1") int pageNo,
 		@RequestParam(value = "sigunguCode", defaultValue = "0") int sigunguCode)  {
+
 		String serviceKey = apiKey;
 		String encodedServiceKey = URLEncoder.encode(serviceKey, StandardCharsets.UTF_8);
 		String apiUrl = "";
@@ -48,7 +48,7 @@ public class TourismController {
 				"&MobileOS=ETC" +
 				"&MobileApp=JejuTravel" +
 				"&areaCode=39" +
-				"&contentTypeId=76" +
+				"&contentTypeId=79" +
 				"&_type=json";
 		} else {
 			apiUrl = "https://apis.data.go.kr/B551011/ChsService1/areaBasedList1" +
@@ -58,17 +58,18 @@ public class TourismController {
 				"&MobileOS=ETC" +
 				"&MobileApp=JejuTravel" +
 				"&areaCode=39" +
-				"&contentTypeId=76" +
+				"&contentTypeId=79" +
 				"&sigunguCode=" + sigunguCode +
 				"&_type=json";
 		}
 		return ApiResponse.createSuccess(openApiManager.fetchContentList(apiUrl,pageNo));
 	}
 
-	@GetMapping("/tourism/search")
-	public ApiResponse<PageResponse<ContentListResponse>> searchTourismList(
+	@GetMapping("/shopping/search")
+	public ApiResponse<PageResponse<ContentListResponse>> searchShoppingList(
 		@RequestParam(value = "pageNo", defaultValue = "1") int pageNo,
 		@RequestParam(value = "keyword", defaultValue = "") String keyword)  {
+
 		PageResponse<ContentListResponse> response = null ;
 
 		if(keyword.equals("")){
@@ -85,9 +86,10 @@ public class TourismController {
 			"&MobileOS=ETC" +
 			"&MobileApp=JejuTravel" +
 			"&areaCode=39" +
-			"&contentTypeId=76" +
+			"&contentTypeId=79" +
 			"&keyword=" + encodedKeyword +
 			"&_type=json";
+
 		response = openApiManager.fetchContentList(apiUrl, pageNo);
 
 		if (response.getContent().isEmpty()) {
@@ -97,24 +99,8 @@ public class TourismController {
 		return ApiResponse.createSuccess(response);
 	}
 
-	@GetMapping("/area")
-	public ApiResponse<List<AreaResponse>> getAreaCode()  {
-
-		String serviceKey = apiKey;
-		String encodedServiceKey = URLEncoder.encode(serviceKey, StandardCharsets.UTF_8);
-		String apiUrl = "https://apis.data.go.kr/B551011/ChsService1/areaCode1" +
-			"?serviceKey=" + encodedServiceKey +
-			"&numOfRows=10" +
-			"&pageNo=1"  +
-			"&MobileOS=ETC" +
-			"&MobileApp=JejuTravel" +
-			"&areaCode=39" +
-			"&_type=json";
-		return ApiResponse.createSuccess(openApiManager.getAreaCode(apiUrl));
-	}
-
-	@GetMapping("/tourism/info/{contentId}")
-	public ApiResponse<List<TourismInfoResponse>> getTourismInfo(@PathVariable Long contentId )  {
+	@GetMapping("/shopping/info/{contentId}")
+	public ApiResponse<List<ShoppingInfoResponse>> getShoppingInfo(@PathVariable Long contentId )  {
 
 		String serviceKey = apiKey;
 		String encodedServiceKey = URLEncoder.encode(serviceKey, StandardCharsets.UTF_8);
@@ -135,11 +121,9 @@ public class TourismController {
 			"&MobileOS=ETC" +
 			"&MobileApp=JejuTravel" +
 			"&contentId=" + contentId +
-			"&contentTypeId=76" +
+			"&contentTypeId=79" +
 			"&_type=json" ;
 
-		return ApiResponse.createSuccess(openApiManager.getTourismInfo(apiUrl, apiUrl2));
+		return ApiResponse.createSuccess(openApiManager.getShoppingInfo(apiUrl, apiUrl2));
 	}
-
-
 }
