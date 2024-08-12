@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.example.jejutravel.global.PythonTranslator;
 import com.example.jejutravel.global.api.ApiResponse;
 
 @RestController
@@ -38,11 +39,15 @@ public class PublicToiletController {
 	private String apiKey;
 
     @GetMapping("/publicToilet")
-    public ApiResponse<?> callApi(){
+    public ApiResponse<?> callApi(        
+        @RequestParam(value = "pageNo", defaultValue = "1") int pageNo
+    ){
         StringBuilder result = new StringBuilder();
         try {
             String apiUrl = "https://apis.data.go.kr/6510000/publicToiletService/getPublicToiletInfoList";
-            URI uri = new URI(apiUrl + "?serviceKey=" + URLEncoder.encode(apiKey, StandardCharsets.UTF_8.toString()) + "&pageNo=1&numOfRows=3");
+            URI uri = new URI(apiUrl + "?serviceKey=" + URLEncoder.encode(apiKey, StandardCharsets.UTF_8.toString()) 
+            + "&pageNo=" +pageNo
+            +"&numOfRows=5");
             URL url = uri.toURL();
 			
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -68,17 +73,64 @@ public class PublicToiletController {
             //단계별로 접근하여, 원하는 데이터에 정확하게 접근
             JsonNode itemsNode = rootNode.path("response").path("body").path("items").path("item");
 
-			List<Map<String, String>> filteredData = new ArrayList<>();
+			List<Map<String, Object>> filteredData = new ArrayList<>();
             if (itemsNode.isArray()) {
                 //데이터 필터링 및 반환: items 배열을 순회하며 필요한 정보를 Map에 저장하고, 이를 리스트로 반환했습니다.
                 for (JsonNode dataNode : itemsNode) { 
-                    Map<String, String> newItem = new HashMap<>();
-                    newItem.put("emdNm", dataNode.path("emdNm").asText());
-                    newItem.put("rnAdres", dataNode.path("rnAdres").asText());
-                    newItem.put("lnmAdres", dataNode.path("lnmAdres").asText());
-                    newItem.put("toiletNm", dataNode.path("toiletNm").asText());
-                    newItem.put("opnTimeInfo", dataNode.path("opnTimeInfo").asText());
-                    newItem.put("photo", dataNode.path("photo").asText());
+                    Map<String, Object> newItem = new HashMap<>();
+                    
+                    // 한국어 -> 중국어 번역
+                    String emdNmKo = dataNode.path("emdNm").asText();
+                    String emdNmZh = PythonTranslator.translate(emdNmKo, "ko", "zh-cn");
+                    newItem.put("emdNm", emdNmZh);
+                    // newItem.put("emdNm", dataNode.path("emdNm").asText()); //읍면동 명
+
+                    String rnAdresKo = dataNode.path("rnAdres").asText();
+                    String rnAdresZh = PythonTranslator.translate(rnAdresKo, "ko", "zh-cn");
+                    newItem.put("rnAdres", rnAdresZh);
+                    // newItem.put("rnAdres", dataNode.path("rnAdres").asText()); //도로명주소
+                    
+                    String lnmAdresKo = dataNode.path("lnmAdres").asText();
+                    String lnmAdresZh = PythonTranslator.translate(lnmAdresKo, "ko", "zh-cn");
+                    newItem.put("lnmAdres", lnmAdresZh);
+                    // newItem.put("lnmAdres", dataNode.path("lnmAdres").asText()); //지번 주소
+                    
+                    String toiletNmKo = dataNode.path("toiletNm").asText();
+                    String toiletNmZh = PythonTranslator.translate(toiletNmKo, "ko", "zh-cn");
+                    newItem.put("toiletNm", toiletNmZh);
+                    // newItem.put("toiletNm", dataNode.path("toiletNm").asText()); //화장실 명
+                    
+                    String opnTimeInfoKo = dataNode.path("opnTimeInfo").asText();
+                    String opnTimeInfoZh = PythonTranslator.translate(opnTimeInfoKo, "ko", "zh-cn");
+                    newItem.put("opnTimeInfo", opnTimeInfoZh);
+                    // newItem.put("opnTimeInfo", dataNode.path("opnTimeInfo").asText()); //개방 시간 정보 ex)연중무휴
+                    
+                    String filthPrcsMthdNmKo = dataNode.path("filthPrcsMthdNm").asText();
+                    String filthPrcsMthdNmZh = PythonTranslator.translate(filthPrcsMthdNmKo, "ko", "zh-cn");
+                    newItem.put("filthPrcsMthdNm", filthPrcsMthdNmZh);
+                    // newItem.put("filthPrcsMthdNm", dataNode.path("filthPrcsMthdNm").asText()); //오물 처리 방식 명 ex)수세식
+                    
+                    newItem.put("laCrdnt", dataNode.path("laCrdnt").asText()); //위도 좌표
+                    newItem.put("loCrdnt", dataNode.path("loCrdnt").asText()); //경도 좌표
+                    newItem.put("telno", dataNode.path("telno").asText()); //전화번호
+                    
+                    newItem.put("toiletEntrncCctvInstlYn", dataNode.path("toiletEntrncCctvInstlYn").asText()); //화장실 입구 CCTV 설치 여부
+                    newItem.put("diaperExhgTablYn", dataNode.path("diaperExhgTablYn").asText()); //기저귀 교환 탁자 여부
+
+                    newItem.put("maleClosetCnt", dataNode.path("maleClosetCnt").asText()); //남성 대변기 수
+                    newItem.put("maleUrinalCnt", dataNode.path("maleUrinalCnt").asText()); //남성 소변기 수
+                    newItem.put("maleDspsnClosetCnt", dataNode.path("maleDspsnClosetCnt").asText()); //남성 장애인 대변기 수
+                    newItem.put("maleDspsnUrinalCnt", dataNode.path("maleDspsnUrinalCnt").asText()); //남성 장애인 소변기 수
+                    // newItem.put("maleChildClosetCnt", dataNode.path("maleChildClosetCnt").asText()); //남성 어린이 대변기 수
+                    // newItem.put("maleChildUrinalCnt", dataNode.path("maleChildUrinalCnt").asText()); //남성 어린이 소변기 수
+                    newItem.put("femaleClosetCnt", dataNode.path("femaleClosetCnt").asText()); //여성 대변기 수
+                    newItem.put("femaleDspsnClosetCnt", dataNode.path("femaleDspsnClosetCnt").asText()); //여성 장애인 대변기 수
+                    // newItem.put("femaleChildClosetCnt", dataNode.path("femaleChildClosetCnt").asText()); //여성 어린이 대변기 수
+                    // newItem.put("etcCn", dataNode.path("etcCn").asText()); //기타 내용
+
+                    // newItem.put("photo", dataNode.path("photo").asText()); //사진
+                    newItem.put("photo", getPhotoUrls(dataNode.path("photo"))); // 사진 URL 리스트
+                    
                     filteredData.add(newItem);
                 }
             }
@@ -92,16 +144,38 @@ public class PublicToiletController {
         }
     }
     
+    // getPhotoUrls 메서드 추가
+    private List<String> getPhotoUrls(JsonNode photoNode) {
+        List<String> photoUrls = new ArrayList<>();
+        if (photoNode.isArray()) {
+            for (JsonNode urlNode : photoNode) {
+                photoUrls.add(urlNode.asText());
+            }
+        }
+        return photoUrls;
+    }
 
 	//publicToilet 검색
 	@GetMapping("/publicToilet/search")
-    public ApiResponse<?> searchPublicToilet(@RequestParam("toiletNm") String toiletNm) { //검색할 toiletNm 받아옴.
+    public ApiResponse<?> searchPublicToilet(
+        @RequestParam("toiletNm") String toiletNm ,//검색할 toiletNm 받아옴.
+        @RequestParam(value = "pageNo", defaultValue = "1") int pageNo
+        ) { 
         StringBuilder result = new StringBuilder();
         try {
+            // 중국어로 된 파라미터를 한국어로 번역
+			String translatedToiletNm = PythonTranslator.translate(toiletNm, "zh-cn", "ko");
+			// String translatedStationName = "공영주차장";
+
+            
             String apiUrl = "https://apis.data.go.kr/6510000/publicToiletService/getPublicToiletInfoList";
-			String encodedToiletNm = URLEncoder.encode(toiletNm, StandardCharsets.UTF_8.toString()); //검색한 toiletNm 인코딩
+            String encodedToiletNm = URLEncoder.encode(translatedToiletNm, StandardCharsets.UTF_8.toString()); //검색한 toiletName 인코딩
+            // String encodedToiletNm = URLEncoder.encode(toiletNm, StandardCharsets.UTF_8.toString()); //검색한 toiletNm 인코딩
             URI uri = new URI(apiUrl + "?serviceKey=" + URLEncoder.encode(apiKey, StandardCharsets.UTF_8.toString()) 
-            + "&pageNo=1&numOfRows=100" + "&toiletNm=" + encodedToiletNm);
+            + "&pageNo=" + pageNo
+            +"&numOfRows=5" 
+            + "&toiletNm=" 
+            + encodedToiletNm);
             URL url = uri.toURL();
 
 			HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -127,18 +201,69 @@ public class PublicToiletController {
 			 //단계별로 접근하여, 원하는 데이터에 정확하게 접근
             JsonNode itemsNode = rootNode.path("response").path("body").path("items").path("item");
 
-            List<Map<String, String>> filteredData = new ArrayList<>();
+            List<Map<String, Object>> filteredData = new ArrayList<>();
             if (itemsNode.isArray()) {
                  //데이터 필터링 및 반환: items 배열을 순회하며 필요한 정보를 Map에 저장하고, 이를 리스트로 반환했습니다.
                 for (JsonNode dataNode : itemsNode) { 
-                    Map<String, String> newItem = new HashMap<>();
-                    newItem.put("emdNm", dataNode.path("emdNm").asText());
-                    newItem.put("rnAdres", dataNode.path("rnAdres").asText());
-                    newItem.put("lnmAdres", dataNode.path("lnmAdres").asText());
-                newItem.put("toiletNm", dataNode.path("toiletNm").asText());
-                newItem.put("opnTimeInfo", dataNode.path("opnTimeInfo").asText());
-                newItem.put("photo", dataNode.path("photo").asText());
-                filteredData.add(newItem);
+                    Map<String, Object> newItem = new HashMap<>();
+                    // 한국어 -> 중국어 번역
+                    String emdNmKo = dataNode.path("emdNm").asText();
+                    String emdNmZh = PythonTranslator.translate(emdNmKo, "ko", "zh-cn");
+                    newItem.put("emdNm", emdNmZh);
+                    // newItem.put("emdNm", dataNode.path("emdNm").asText()); //읍면동 명
+
+                    String rnAdresKo = dataNode.path("rnAdres").asText();
+                    String rnAdresZh = PythonTranslator.translate(rnAdresKo, "ko", "zh-cn");
+                    newItem.put("rnAdres", rnAdresZh);
+                    // newItem.put("rnAdres", dataNode.path("rnAdres").asText()); //도로명주소
+                    
+                    String lnmAdresKo = dataNode.path("lnmAdres").asText();
+                    String lnmAdresZh = PythonTranslator.translate(lnmAdresKo, "ko", "zh-cn");
+                    newItem.put("lnmAdres", lnmAdresZh);
+                    // newItem.put("lnmAdres", dataNode.path("lnmAdres").asText()); //지번 주소
+                    
+                    String toiletNmKo = dataNode.path("toiletNm").asText();
+                    String toiletNmZh = PythonTranslator.translate(toiletNmKo, "ko", "zh-cn");
+                    newItem.put("toiletNm", toiletNmZh);
+                    // newItem.put("toiletNm", dataNode.path("toiletNm").asText()); //화장실 명
+                    
+                    String opnTimeInfoKo = dataNode.path("opnTimeInfo").asText();
+                    String opnTimeInfoZh = PythonTranslator.translate(opnTimeInfoKo, "ko", "zh-cn");
+                    newItem.put("opnTimeInfo", opnTimeInfoZh);
+                    // newItem.put("opnTimeInfo", dataNode.path("opnTimeInfo").asText()); //개방 시간 정보 ex)연중무휴
+                    
+                    String filthPrcsMthdNmKo = dataNode.path("filthPrcsMthdNm").asText();
+                    String filthPrcsMthdNmZh = PythonTranslator.translate(filthPrcsMthdNmKo, "ko", "zh-cn");
+                    newItem.put("filthPrcsMthdNm", filthPrcsMthdNmZh);
+                    // newItem.put("filthPrcsMthdNm", dataNode.path("filthPrcsMthdNm").asText()); //오물 처리 방식 명 ex)수세식
+
+                    // newItem.put("emdNm", dataNode.path("emdNm").asText()); //읍면동 명
+                    // newItem.put("rnAdres", dataNode.path("rnAdres").asText()); //도로명주소
+                    // newItem.put("lnmAdres", dataNode.path("lnmAdres").asText()); //지번 주소
+                    // newItem.put("toiletNm", dataNode.path("toiletNm").asText()); //화장실 명
+                    // newItem.put("opnTimeInfo", dataNode.path("opnTimeInfo").asText()); //개방 시간 정보 ex)연중무휴
+                    // newItem.put("filthPrcsMthdNm", dataNode.path("filthPrcsMthdNm").asText()); //오물 처리 방식 명 ex)수세식
+                    
+                    newItem.put("laCrdnt", dataNode.path("laCrdnt").asText()); //위도 좌표
+                    newItem.put("loCrdnt", dataNode.path("loCrdnt").asText()); //경도 좌표
+                    newItem.put("telno", dataNode.path("telno").asText()); //전화번호
+                    newItem.put("toiletEntrncCctvInstlYn", dataNode.path("toiletEntrncCctvInstlYn").asText()); //화장실 입구 CCTV 설치 여부
+                    newItem.put("diaperExhgTablYn", dataNode.path("diaperExhgTablYn").asText()); //기저귀 교환 탁자 여부
+
+                    newItem.put("maleClosetCnt", dataNode.path("maleClosetCnt").asText()); //남성 대변기 수
+                    newItem.put("maleUrinalCnt", dataNode.path("maleUrinalCnt").asText()); //남성 소변기 수
+                    newItem.put("maleDspsnClosetCnt", dataNode.path("maleDspsnClosetCnt").asText()); //남성 장애인 대변기 수
+                    newItem.put("maleDspsnUrinalCnt", dataNode.path("maleDspsnUrinalCnt").asText()); //남성 장애인 소변기 수
+                    // newItem.put("maleChildClosetCnt", dataNode.path("maleChildClosetCnt").asText()); //남성 어린이 대변기 수
+                    // newItem.put("maleChildUrinalCnt", dataNode.path("maleChildUrinalCnt").asText()); //남성 어린이 소변기 수
+                    newItem.put("femaleClosetCnt", dataNode.path("femaleClosetCnt").asText()); //여성 대변기 수
+                    newItem.put("femaleDspsnClosetCnt", dataNode.path("femaleDspsnClosetCnt").asText()); //여성 장애인 대변기 수
+                    // newItem.put("femaleChildClosetCnt", dataNode.path("femaleChildClosetCnt").asText()); //여성 어린이 대변기 수
+                    // newItem.put("etcCn", dataNode.path("etcCn").asText()); //기타 내용
+
+                    // newItem.put("photo", dataNode.path("photo").asText()); //사진
+                    newItem.put("photo", getPhotoUrls(dataNode.path("photo"))); // 사진 URL 리스트
+                    filteredData.add(newItem);
                 }
             }
 
