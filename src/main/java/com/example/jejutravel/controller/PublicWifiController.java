@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.example.jejutravel.global.PythonTranslator;
 import com.example.jejutravel.global.api.ApiResponse;
 
 @RestController
@@ -37,12 +38,14 @@ public class PublicWifiController {
 	private String jejuApiKey;
 
     @GetMapping("/publicWifi")
-    public ApiResponse<?> callApi(){
+    public ApiResponse<?> callApi(
+		@RequestParam(value = "pageNo", defaultValue = "1") int pageNo
+	){
         StringBuilder result = new StringBuilder();
         try {
             String apiUrl = "https://open.jejudatahub.net/api/proxy/Dtb18ta1btbD1Da1a81aaDttab6tDabb/" +
             jejuApiKey + "?" +
-            "number=1" +
+            "number=" + pageNo +
             "&limit=5";
 
             URL url = new URL(apiUrl);
@@ -71,12 +74,41 @@ public class PublicWifiController {
 			List<Map<String, String>> filteredData = new ArrayList<>();
 			for (JsonNode dataNode : dataArray) {
 				Map<String, String> newItem = new HashMap<>();
-				newItem.put("apGroupName", dataNode.path("apGroupName").asText());
-				newItem.put("installLocationDetail", dataNode.path("installLocationDetail").asText());
-				newItem.put("category", dataNode.path("category").asText());
-				newItem.put("categoryDetail", dataNode.path("categoryDetail").asText());
-				newItem.put("addressDong", dataNode.path("addressDong").asText());
-				newItem.put("addressDetail", dataNode.path("addressDetail").asText());
+
+				newItem.put("latitude", dataNode.path("latitude").asText());
+				newItem.put("longitude", dataNode.path("longitude").asText());
+				
+				// 한국어 -> 중국어 번역
+				String apGroupNameKo = dataNode.path("apGroupName").asText();
+				String apGroupNameZh = PythonTranslator.translate(apGroupNameKo, "ko", "zh-cn");
+				newItem.put("apGroupName", apGroupNameZh);
+				// newItem.put("apGroupName", dataNode.path("apGroupName").asText());
+
+				String installLocationDetailKo = dataNode.path("installLocationDetail").asText();
+				String installLocationDetailZh = PythonTranslator.translate(installLocationDetailKo, "ko", "zh-cn");
+				newItem.put("installLocationDetail", installLocationDetailZh);
+				// newItem.put("installLocationDetail", dataNode.path("installLocationDetail").asText());
+
+				String categoryKo = dataNode.path("category").asText();
+				String categoryZh = PythonTranslator.translate(categoryKo, "ko", "zh-cn");
+				newItem.put("category", categoryZh);
+				// newItem.put("category", dataNode.path("category").asText());
+				
+				String categoryDetailKo = dataNode.path("categoryDetail").asText();
+				String categoryDetailZh = PythonTranslator.translate(categoryDetailKo, "ko", "zh-cn");
+				newItem.put("categoryDetail", categoryDetailZh);
+				// newItem.put("categoryDetail", dataNode.path("categoryDetail").asText());
+				
+				String addressDongKo = dataNode.path("addressDong").asText();
+				String addressDongZh = PythonTranslator.translate(addressDongKo, "ko", "zh-cn");
+				newItem.put("addressDong", addressDongZh);
+				// newItem.put("addressDong", dataNode.path("addressDong").asText());
+				
+				String addressDetailKo = dataNode.path("addressDetail").asText();
+				String addressDetailZh = PythonTranslator.translate(addressDetailKo, "ko", "zh-cn");
+				newItem.put("addressDetail", addressDetailZh);
+				// newItem.put("addressDetail", dataNode.path("addressDetail").asText());
+
 				filteredData.add(newItem);
 			}
 
@@ -91,15 +123,22 @@ public class PublicWifiController {
 
 	//publicWifi 검색
 	@GetMapping("/publicWifi/search")
-    public ApiResponse<?> searchPublicWifi(@RequestParam("apGroupName") String apGroupName) { //검색할 apGroupName 받아옴.
+    public ApiResponse<?> searchPublicWifi(
+		@RequestParam("apGroupName") String apGroupName, //검색할 apGroupName 받아옴.
+		@RequestParam(value = "pageNo", defaultValue = "1") int pageNo
+		) { 
         StringBuilder result = new StringBuilder();
         try {
-			String encodedApGroupName = URLEncoder.encode(apGroupName, StandardCharsets.UTF_8.toString()); //검색한 apGroupName 인코딩
+			// 중국어로 된 파라미터를 한국어로 번역
+			String translatedApGroupName = PythonTranslator.translate(apGroupName, "zh-cn", "ko");
+			// String translatedStationName = "한국병원";
+
+			String encodedApGroupName = URLEncoder.encode(translatedApGroupName, StandardCharsets.UTF_8.toString()); //검색한 apGroupName 인코딩
             String apiUrl = "https://open.jejudatahub.net/api/proxy/Dtb18ta1btbD1Da1a81aaDttab6tDabb/" +
             jejuApiKey + "?" +
             "apGroupName=" + encodedApGroupName +						
-            "&number=1" +
-            "&limit=100";
+            "&number=" + pageNo +
+            "&limit=5";
 
             URL url = new URL(apiUrl);
 			HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -127,12 +166,41 @@ public class PublicWifiController {
 			List<Map<String, String>> filteredData = new ArrayList<>();
 			for (JsonNode dataNode : dataArray) {
 				Map<String, String> newItem = new HashMap<>();
-				newItem.put("apGroupName", dataNode.path("apGroupName").asText());
-				newItem.put("installLocationDetail", dataNode.path("installLocationDetail").asText());
-				newItem.put("category", dataNode.path("category").asText());
-				newItem.put("categoryDetail", dataNode.path("categoryDetail").asText());
-				newItem.put("addressDong", dataNode.path("addressDong").asText());
-				newItem.put("addressDetail", dataNode.path("addressDetail").asText());
+
+				newItem.put("latitude", dataNode.path("latitude").asText());
+				newItem.put("longitude", dataNode.path("longitude").asText());
+				
+				// 한국어 -> 중국어 번역
+				String apGroupNameKo = dataNode.path("apGroupName").asText();
+				String apGroupNameZh = PythonTranslator.translate(apGroupNameKo, "ko", "zh-cn");
+				newItem.put("apGroupName", apGroupNameZh);
+				// newItem.put("apGroupName", dataNode.path("apGroupName").asText());
+
+				String installLocationDetailKo = dataNode.path("installLocationDetail").asText();
+				String installLocationDetailZh = PythonTranslator.translate(installLocationDetailKo, "ko", "zh-cn");
+				newItem.put("installLocationDetail", installLocationDetailZh);
+				// newItem.put("installLocationDetail", dataNode.path("installLocationDetail").asText());
+
+				String categoryKo = dataNode.path("category").asText();
+				String categoryZh = PythonTranslator.translate(categoryKo, "ko", "zh-cn");
+				newItem.put("category", categoryZh);
+				// newItem.put("category", dataNode.path("category").asText());
+				
+				String categoryDetailKo = dataNode.path("categoryDetail").asText();
+				String categoryDetailZh = PythonTranslator.translate(categoryDetailKo, "ko", "zh-cn");
+				newItem.put("categoryDetail", categoryDetailZh);
+				// newItem.put("categoryDetail", dataNode.path("categoryDetail").asText());
+				
+				String addressDongKo = dataNode.path("addressDong").asText();
+				String addressDongZh = PythonTranslator.translate(addressDongKo, "ko", "zh-cn");
+				newItem.put("addressDong", addressDongZh);
+				// newItem.put("addressDong", dataNode.path("addressDong").asText());
+				
+				String addressDetailKo = dataNode.path("addressDetail").asText();
+				String addressDetailZh = PythonTranslator.translate(addressDetailKo, "ko", "zh-cn");
+				newItem.put("addressDetail", addressDetailZh);
+				// newItem.put("addressDetail", dataNode.path("addressDetail").asText());
+				
 				filteredData.add(newItem);
 			}
 
