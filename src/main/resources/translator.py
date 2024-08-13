@@ -3,8 +3,9 @@ import sys
 
 def translate_text(text, src, dest):
     translator = Translator()
-    # translation = translator.translate(text, src=src, dest=dest)
-    # return translation.text
+    # None 또는 빈 문자열 체크
+    if text is None or text.strip() == "":
+        return "未提供翻译文本(No text provided for translation)"
     try:
         translation = translator.translate(text, src=src, dest=dest)
         return translation.text
