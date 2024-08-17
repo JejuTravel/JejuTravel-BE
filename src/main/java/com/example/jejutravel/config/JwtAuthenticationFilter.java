@@ -22,11 +22,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Order(0)
 @RequiredArgsConstructor
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final TokenProvider tokenProvider;
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -42,6 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (ExpiredJwtException e) {
             reissueAccessToken(request, response, e);
         } catch (Exception e) {
+            logger.error("Exception in JWT filter: {}", e.getMessage());
             request.setAttribute("exception", e);
         }
         filterChain.doFilter(request, response);
@@ -49,17 +54,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String parseBearerToken(HttpServletRequest request, String headerName) {
         return Optional.ofNullable(request.getHeader(headerName))
-                .filter(token -> token.substring(0, 7).equalsIgnoreCase("Bearer "))
+                .filter(token -> token.length() > 7 && token.substring(0, 7).equalsIgnoreCase("Bearer "))
                 .map(token -> token.substring(7))
                 .orElse(null);
     }
 
     private User parseUserSpecification(String token) {
-        String[] split = Optional.ofNullable(token)
-                .filter(subject -> subject.length() >= 10)
+        String subject = Optional.ofNullable(token)
+                .filter(t -> t.length() > 10)
                 .map(tokenProvider::validateTokenAndGetSubject)
-                .orElse("anonymous:anonymous")
-                .split(":");
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or missing token"));
+
+        logger.info("Parsed subject from token: {}", subject);
+
+        String[] split = subject.split(":");
+        if (split.length != 2) {
+            throw new IllegalArgumentException(
+                    "Invalid token format. Expected format: 'userId:role'. Found: " + subject);
+        }
 
         return new User(split[0], "", List.of(new SimpleGrantedAuthority(split[1])));
     }
@@ -81,6 +93,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             response.setHeader("New-Access-Token", newAccessToken);
         } catch (Exception e) {
+            logger.error("Exception in reissuing access token: {}", e.getMessage());
             request.setAttribute("exception", e);
         }
     }
