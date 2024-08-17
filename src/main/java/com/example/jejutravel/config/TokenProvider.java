@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.jejutravel.domain.Entity.RefreshToken;
+import com.example.jejutravel.domain.Entity.User;
 import com.example.jejutravel.repository.RefreshTokenRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,7 +38,6 @@ public class TokenProvider {
     private final long refreshExpirationHours;
     private final String issuer;
     private final RefreshTokenRepository refreshTokenRepository;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public TokenProvider(
@@ -53,13 +53,11 @@ public class TokenProvider {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
-    public String createToken(String userSpecification) {
+    public String createToken(User user) {
+        String userSpecification = user.getUserId() + ":" + user.getUserUsername();
         return Jwts.builder()
-                .signWith(new SecretKeySpec(secretKey.getBytes(), SignatureAlgorithm.HS512.getJcaName())) // HS512 알고리즘을
-                                                                                                          // 사용하여
-                                                                                                          // secretKey를
-                                                                                                          // 이용해 서명
-                .setSubject(userSpecification) // JWT 토큰 제목
+                .signWith(new SecretKeySpec(secretKey.getBytes(), SignatureAlgorithm.HS512.getJcaName()))
+                .setSubject(userSpecification) // JWT 토큰 제목에 사용자 ID와 사용자명 포함
                 .setIssuer(issuer) // JWT 토큰 발급자
                 .setIssuedAt(Timestamp.valueOf(LocalDateTime.now())) // JWT 토큰 발급 시간
                 .setExpiration(Date.from(Instant.now().plus(expirationMinutes, ChronoUnit.MINUTES))) // JWT 토큰 만료 시간
@@ -91,14 +89,24 @@ public class TokenProvider {
         if (oldRefreshToken.isEmpty()) {
             throw new ExpiredJwtException(null, null, "Refresh token expired.");
         }
-        return createToken(subject);
+        return createTokenFromSubject(subject);
+    }
+
+    private String createTokenFromSubject(String subject) {
+        return Jwts.builder()
+                .signWith(new SecretKeySpec(secretKey.getBytes(), SignatureAlgorithm.HS512.getJcaName()))
+                .setSubject(subject)
+                .setIssuer(issuer)
+                .setIssuedAt(Timestamp.valueOf(LocalDateTime.now()))
+                .setExpiration(Date.from(Instant.now().plus(expirationMinutes, ChronoUnit.MINUTES)))
+                .compact();
     }
 
     @Transactional(readOnly = true)
     public void validateRefreshToken(String refreshToken, String oldAccessToken) throws JsonProcessingException {
         validateAndParseToken(refreshToken);
-        String memberId = decodeJwtPayloadSubject(oldAccessToken).split(":")[0];
-        refreshTokenRepository.findById(Long.parseLong(memberId))
+        String userId = decodeJwtPayloadSubject(oldAccessToken).split(":")[0];
+        refreshTokenRepository.findById(Long.parseLong(userId))
                 .filter(RefreshToken -> RefreshToken.validateRefreshToken(refreshToken))
                 .orElseThrow(() -> new ExpiredJwtException(null, null, "Refresh token expired."));
     }

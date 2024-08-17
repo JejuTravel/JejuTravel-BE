@@ -80,8 +80,11 @@ public class UserService {
                     .msg("비밀번호가 일치하지 않습니다.")
                     .build();
         }
-        String accessToken = tokenProvider.createToken(user.getUserUsername());
+
+        // User 객체를 기반으로 토큰을 생성합니다.
+        String accessToken = tokenProvider.createToken(user);
         String refreshToken = tokenProvider.createRefreshToken();
+
         Optional<RefreshToken> oldRefreshToken = refreshTokenRepository.findById(user.getUserId());
         if (oldRefreshToken.isEmpty()) {
             RefreshToken newRefreshToken = RefreshToken.builder()
@@ -96,6 +99,7 @@ public class UserService {
                     .build();
             refreshTokenRepository.save(newRefreshToken);
         }
+
         return SignInResponse.builder()
                 .userName(user.getUserName())
                 .msg("로그인 성공")
