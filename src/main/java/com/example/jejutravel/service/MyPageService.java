@@ -18,6 +18,7 @@ public class MyPageService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // 개인정보 조회
     @Transactional(readOnly = true)
     public MyPageResponse getUser(Long userId) {
         User user = userRepository.findById(userId)
@@ -32,7 +33,7 @@ public class MyPageService {
                 .userEmail(user.getUserEmail())
                 .build();
     }
-
+    // 개인정보 수정
     @Transactional
     public void updateUser(Long userId, MyPageUpdateRequest updateRequest) {
         User user = userRepository.findById(userId)
@@ -57,4 +58,28 @@ public class MyPageService {
 
         userRepository.save(user);
     }
+
+    // 비밀번호 수정
+    @Transactional
+    public void updatePassword(Long userId, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        System.out.println("user: " + user.getUserEmail());
+        // 기존의 모든 필수 필드들을 유지한 채로 비밀번호만 업데이트
+        user = user.toBuilder()
+                .userPassword(passwordEncoder.encode(newPassword))
+                .userEmail(user.getUserEmail()) // 필수 필드 추가
+                .userName(user.getUserName()) // 필수 필드 추가
+                .userDateOfBirth(user.getUserDateOfBirth()) // 필수 필드 추가
+                .userPhoneNumber(user.getUserPhoneNumber()) // 필수 필드 추가
+                .userGender(user.isUserGender()) // 필수 필드 추가
+                .userCreatedAt(user.getUserCreatedAt()) // 생성일시 유지
+                .userUpdatedAt(new Date(System.currentTimeMillis())) // 수정일시
+                .build();
+
+        userRepository.save(user);
+
+    }
+
+
 }
