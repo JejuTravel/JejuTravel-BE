@@ -56,6 +56,20 @@ public class ReviewController {
 		return ApiResponse.createSuccess(reviews);
 	}
 
+	@GetMapping("/review/positive/{contentId}")
+	public ApiResponse<List<ReviewListResponse>> findPositiveReviewByContent(@PathVariable Long contentId) {
+
+		List<ReviewListResponse> reviews = reviewService.findPositiveReviewByContent(contentId);
+		return ApiResponse.createSuccess(reviews);
+	}
+
+	@GetMapping("/review/negative/{contentId}")
+	public ApiResponse<List<ReviewListResponse>> findNegativeReviewByContent(@PathVariable Long contentId) {
+
+		List<ReviewListResponse> reviews = reviewService.findNegativeReviewByContent(contentId);
+		return ApiResponse.createSuccess(reviews);
+	}
+
 	@GetMapping("/review/average/{contentId}")
 	public ApiResponse<Double> getAverageRating(@PathVariable Long contentId) {
 

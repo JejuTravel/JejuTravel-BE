@@ -13,6 +13,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 	@Query("select r from Review r where r.contentId=:contentId and r.reviewDeleteYn=false")
 	List<Review> findByContentId(Long contentId);
 
+	@Query("select r from Review r where r.contentId=:contentId and r.reviewDeleteYn=false and r.sentiment='positive'")
+	List<Review> findByContentIdAndSentimentIsPositive(Long contentId);
+
+	@Query("select r from Review r where r.contentId=:contentId and r.reviewDeleteYn=false and r.sentiment='negative'")
+	List<Review> findByContentIdAndSentimentIsNegative(Long contentId);
+
 	@Query("select r from Review r where r.user=:user and r.reviewDeleteYn=false")
 	List<Review> findByUser(User user);
 
