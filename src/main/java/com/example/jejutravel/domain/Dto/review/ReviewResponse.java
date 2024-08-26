@@ -18,6 +18,7 @@ public class ReviewResponse {
 	private Integer reviewRating;
 	private Date reviewCreatedAt;
 	private Date reviewUpdatedAt;
+	private String sentiment;
 
 	public ReviewResponse(Review review) {
 		this.reviewId = review.getReviewId();
@@ -27,5 +28,6 @@ public class ReviewResponse {
 		this.reviewRating = review.getReviewRating();
 		this.reviewCreatedAt = review.getReviewCreatedAt();
 		this.reviewUpdatedAt = review.getReviewUpdatedAt();
+		this.sentiment = review.getSentiment();
 	}
 }
