@@ -3,12 +3,10 @@ package com.example.jejutravel.controller;
 import com.example.jejutravel.global.api.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -20,14 +18,27 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CalenderController {
 
-    @Value("${AccessToken}")
-    private String AccessToken;
-
     // 일정 생성
     @PostMapping(value = "/create/event", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public ApiResponse<?> createEvent(@RequestBody MultiValueMap<String, String> formData) {
-        String token = AccessToken;
+    public ApiResponse<?> createEvent(
+            @RequestBody MultiValueMap<String, String> formData,
+            @RequestHeader("Authorization") String authorizationHeader) {
 
+//        String token = AccessToken;
+        // Authorization 헤더에서 토큰 추출
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ApiResponse.createError("카카오 로그인을 먼저 진행해주세요. AccessToken이 존재하지 않습니다.");
+        }
+
+        String token = authorizationHeader.substring(7);  // "Bearer " 이후 토큰 추출
+        System.out.println("Received Access Token: " + token);
+
+        /*
+        POST /api/v1/create/event 요청 사항
+        Authorization: Bearer your-access-token-here
+        Content-Type: application/x-www-form-urlencoded
+        event=...
+         */
         try {
             String apiUrl = "https://kapi.kakao.com/v2/api/calendar/create/event";
 
@@ -58,9 +69,17 @@ public class CalenderController {
     @GetMapping("/events")
     public ApiResponse<?> events(
             @RequestParam("from") String from,
-            @RequestParam("to") String to
+            @RequestParam("to") String to,
+            @RequestHeader("Authorization") String authorizationHeader
     ) {
-        String token = AccessToken;
+//        String token = AccessToken;
+
+        // Authorization 헤더에서 토큰 추출
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ApiResponse.createError("카카오 로그인을 먼저 진행해주세요. AccessToken이 존재하지 않습니다.");
+        }
+        String token = authorizationHeader.substring(7);  // "Bearer " 이후 토큰 추출
+        System.out.println("Received Access Token: " + token);
 
         try {
             String apiUrl = "https://kapi.kakao.com/v2/api/calendar/events" +
@@ -90,9 +109,17 @@ public class CalenderController {
     // 상세 조회
     @GetMapping("/event")   
     public ApiResponse<?> event(
-            @RequestParam("event_id") String event_id
+            @RequestParam("event_id") String event_id,
+            @RequestHeader("Authorization") String authorizationHeader
     ) {
-        String token = AccessToken;
+//        String token = AccessToken;
+        // Authorization 헤더에서 토큰 추출
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ApiResponse.createError("카카오 로그인을 먼저 진행해주세요. AccessToken이 존재하지 않습니다.");
+        }
+        String token = authorizationHeader.substring(7);  // "Bearer " 이후 토큰 추출
+        System.out.println("Received Access Token: " + token);
+
         try {
             String apiUrl = "https://kapi.kakao.com/v2/api/calendar/event" +
                     "?event_id=" + event_id;
@@ -119,8 +146,16 @@ public class CalenderController {
 
     // 일정 수정
     @PostMapping(value = "/update/event", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public ApiResponse<?> updateEvent(@RequestBody MultiValueMap<String, String> paramMap) {
-        String token = AccessToken;
+    public ApiResponse<?> updateEvent(
+            @RequestBody MultiValueMap<String, String> paramMap,
+            @RequestHeader("Authorization") String authorizationHeader) {
+//        String token = AccessToken;
+        // Authorization 헤더에서 토큰 추출
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ApiResponse.createError("카카오 로그인을 먼저 진행해주세요. AccessToken이 존재하지 않습니다.");
+        }
+        String token = authorizationHeader.substring(7);  // "Bearer " 이후 토큰 추출
+        System.out.println("Received Access Token: " + token);
 
         // 필요한 데이터를 MultiValueMap에서 추출
         String event = paramMap.getFirst("event");
@@ -166,10 +201,17 @@ public class CalenderController {
     @DeleteMapping( "/delete/event")
     public ApiResponse<?> deleteEvent(
             @RequestParam("event_id") String event_id,
-            @RequestParam(value = "recur_update_type", defaultValue = "THIS") String recur_update_type
+            @RequestParam(value = "recur_update_type", defaultValue = "THIS") String recur_update_type,
+            @RequestHeader("Authorization") String authorizationHeader
     ) {
 
-        String token = AccessToken;
+//        String token = AccessToken;
+        // Authorization 헤더에서 토큰 추출
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ApiResponse.createError("카카오 로그인을 먼저 진행해주세요. AccessToken이 존재하지 않습니다.");
+        }
+        String token = authorizationHeader.substring(7);  // "Bearer " 이후 토큰 추출
+        System.out.println("Received Access Token: " + token);
 
         try {
             // API URL 구성
