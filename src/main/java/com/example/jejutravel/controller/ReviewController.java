@@ -4,11 +4,16 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.jejutravel.domain.Dto.review.ReviewListResponse;
@@ -50,23 +55,30 @@ public class ReviewController {
 	}
 
 	@GetMapping("/review/{contentId}")
-	public ApiResponse<List<ReviewListResponse>> findReviewByContent(@PathVariable Long contentId) {
+	public ApiResponse<Page<ReviewListResponse>> findReviewByContent(
+		@PathVariable Long contentId,
+		@RequestParam(value = "pageNumber", defaultValue = "1") int pageNumber,
+		@PageableDefault(size = 10, direction = Sort.Direction.DESC) Pageable pageable) {
 
-		List<ReviewListResponse> reviews = reviewService.findByContentId(contentId);
+		Page<ReviewListResponse> reviews = reviewService.findByContentId(contentId, pageNumber, pageable);
 		return ApiResponse.createSuccess(reviews);
 	}
 
 	@GetMapping("/review/positive/{contentId}")
-	public ApiResponse<List<ReviewListResponse>> findPositiveReviewByContent(@PathVariable Long contentId) {
+	public ApiResponse<Page<ReviewListResponse>> findPositiveReviewByContent(@PathVariable Long contentId,
+		@RequestParam(value = "pageNumber", defaultValue = "1") int pageNumber,
+		@PageableDefault(size = 10, direction = Sort.Direction.DESC) Pageable pageable) {
 
-		List<ReviewListResponse> reviews = reviewService.findPositiveReviewByContent(contentId);
+		Page<ReviewListResponse> reviews = reviewService.findPositiveReviewByContent(contentId, pageNumber, pageable);
 		return ApiResponse.createSuccess(reviews);
 	}
 
 	@GetMapping("/review/negative/{contentId}")
-	public ApiResponse<List<ReviewListResponse>> findNegativeReviewByContent(@PathVariable Long contentId) {
+	public ApiResponse<Page<ReviewListResponse>> findNegativeReviewByContent(@PathVariable Long contentId,
+		@RequestParam(value = "pageNumber", defaultValue = "1") int pageNumber,
+		@PageableDefault(size = 10, direction = Sort.Direction.DESC) Pageable pageable) {
 
-		List<ReviewListResponse> reviews = reviewService.findNegativeReviewByContent(contentId);
+		Page<ReviewListResponse> reviews = reviewService.findNegativeReviewByContent(contentId, pageNumber, pageable);
 		return ApiResponse.createSuccess(reviews);
 	}
 
