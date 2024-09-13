@@ -8,6 +8,9 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.parser.BeanOutputParser;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,9 +24,11 @@ import com.example.jejutravel.repository.ReviewRepository;
 import com.example.jejutravel.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReviewService {
 
 	private final ReviewRepository reviewRepository;
@@ -76,24 +81,29 @@ public class ReviewService {
 	}
 
 	@Transactional
-	public List<ReviewListResponse> findByContentId(Long contentId) {
-		return reviewRepository.findByContentId(contentId)
-			.stream().map(ReviewListResponse::new)
-			.toList();
+	public Page<ReviewListResponse> findByContentId(Long contentId, int pageNumber, Pageable pageable) {
+
+		Page<Review> reviews = reviewRepository.findByContentId(contentId,
+			PageRequest.of(pageNumber - 1, pageable.getPageSize(), pageable.getSort()));
+
+		return  reviews.map(ReviewListResponse::new);
 	}
 
 	@Transactional
-	public List<ReviewListResponse> findPositiveReviewByContent(Long contentId) {
-		return reviewRepository.findByContentIdAndSentimentIsPositive(contentId)
-			.stream().map(ReviewListResponse::new)
-			.toList();
+	public Page<ReviewListResponse> findPositiveReviewByContent(Long contentId, int pageNumber, Pageable pageable) {
+		Page<Review> reviews = reviewRepository.findByContentIdAndSentimentIsPositive(contentId,
+			PageRequest.of(pageNumber - 1, pageable.getPageSize(), pageable.getSort()));
+
+		return  reviews.map(ReviewListResponse::new);
 	}
 
 	@Transactional
-	public List<ReviewListResponse> findNegativeReviewByContent(Long contentId) {
-		return reviewRepository.findByContentIdAndSentimentIsNegative(contentId)
-			.stream().map(ReviewListResponse::new)
-			.toList();
+	public Page<ReviewListResponse> findNegativeReviewByContent(Long contentId, int pageNumber, Pageable pageable) {
+
+		Page<Review> reviews = reviewRepository.findByContentIdAndSentimentIsNegative(contentId,
+			PageRequest.of(pageNumber - 1, pageable.getPageSize(), pageable.getSort()));
+
+		return  reviews.map(ReviewListResponse::new);
 	}
 
 	@Transactional
@@ -124,20 +134,40 @@ public class ReviewService {
 		var outputParser = new BeanOutputParser<>(String.class);
 
 		String promptString = """
-                리뷰: "{reviewText}"
-                위 리뷰 정보가 긍정적인지 부정적인지 판단하고, 긍정인 경우에는 'positive'를, 부정인 경우에는 'negative'로 응답해줘.
-                sentiment(응답)에는 'positive' 또는 'negative'만 올 수 있어. null이나 다른 값은 넣을 수 없어.
-                'positive' 또는 'negative'를 넣기 애매한 경우에는 5점 만점인 {reviewRating}을 참고해서 응답해줘.
-                예를들어 reviewText가 '애매해요'라면 'reviewRating'가 1점이면 'negative'이고 3점이면 'positive'로 응답해줘.
-                처음에는 좋았다가 별로여서 수정하게 되거나 처음엔 별로였다가 좋아지는 경우가 생길 수 있으니 'reviewText'를 잘 분석해줘.
-                {format}
-                """;
+            리뷰 텍스트를 분석하여 감정을 판단합니다. 다음 지침을 정확히 따르세요:
+            
+            리뷰 내용: "{reviewText}"
+            리뷰 평점 (5점 만점): "{reviewRating}"
+            
+            1. 리뷰 내용의 의미와 문맥을 최우선으로 고려하여 감정을 분석하세요.
+                - 긍정적인 내용이면 'positive'로 응답하세요.
+                - 부정적인 내용이면 'negative'로 응답하세요.
+            2. 반환값에는 오직 'positive' 또는 'negative'만 올 수 있습니다. 다른 값, null, 또는 빈 값은 절대 허용되지 않습니다.
+            3. 다음과 같은 중립적인 표현은 긍정으로 판단하세요: "괜찮다", "무난하다", "나쁘지 않다"
+            4. 리뷰 내용이 명확하지 않거나, 긍정/부정의 판단이 어려운 애매한 표현인 경우에만 리뷰 평점을 참고하여 결정하세요:
+                - 애매한 표현의 예시: "좋기도 하고 나쁘기도 해요", "잘 모르겠어요", "애매해요", "몰라요"
+                - 위와 같은 애매한 표현에서는 평점을 참고하여 판단하세요:
+                    - 평점이 1점이나 2점이면 'negative'로 판단하세요.
+                    - 평점이 3점 이상이면 'positive'로 판단하세요.
+            5. 리뷰 내용이 처음에는 긍정적이었다가 부정적으로 변하거나, 반대로 부정적이었다가 긍정적으로 변할 수 있습니다. 문맥을 전체적으로 분석하여 최종적인 감정을 결정하세요.        
+            
+            응답 형식은 반드시 다음과 같아야 합니다:
+            'positive'
+            또는
+            'negative'
+            
+            모든 응답은 위의 규칙을 엄격히 따르세요. 형식을 정확히 지켜 응답을 생성해야 합니다.
+            {format}
+            """;
 
 		PromptTemplate template = new PromptTemplate(promptString, Map.of("reviewText", entity.getReviewContent(), "reviewRating", entity.getReviewRating(),"format", outputParser.getFormat()));
 		Prompt prompt = template.create();
 		Generation generation = chatClient.call(prompt).getResult();
+		log.info("generation {}",generation);
 
 		String sentiment = outputParser.parse(generation.getOutput().getContent());
+
+		log.info("sentiment {}",sentiment);
 
 		return sentiment;
 	}
