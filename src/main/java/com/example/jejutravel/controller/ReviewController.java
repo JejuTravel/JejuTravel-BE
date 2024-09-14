@@ -94,4 +94,10 @@ public class ReviewController {
 		List<ReviewListResponse> reviews = reviewService.findByUserId(userId);
 		return ApiResponse.createSuccess(reviews);
 	}
+
+	@GetMapping("/review/similarUsers/{userId}")
+	public ApiResponse<?> findSimilarUsers(@PathVariable Long userId) {
+
+		return ApiResponse.createSuccessWithMessage(reviewService.findSimilarUsers(userId),"유사한 사용자 도출되었습니다.");
+	}
 }
