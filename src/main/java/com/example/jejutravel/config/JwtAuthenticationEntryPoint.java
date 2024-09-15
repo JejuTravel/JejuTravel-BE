@@ -20,7 +20,11 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) {
-        resolver.resolveException(request, response, null, (Exception) request.getAttribute("exception"));
+        // exception 객체가 null일 경우 기본 메시지 설정
+        Exception exception = (Exception) request.getAttribute("exception");
+        if (exception == null) {
+            exception = new Exception("Unknown authentication error occurred");
+        }
+        resolver.resolveException(request, response, null, exception);
     }
-
 }
