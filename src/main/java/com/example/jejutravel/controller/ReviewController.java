@@ -101,4 +101,10 @@ public class ReviewController {
 		List<String> top2Cat3 = reviewService.getTop2Cat3ByUserId(userId);
 		return ResponseEntity.ok(top2Cat3);
 	}
+
+	@GetMapping("/review/similarUsers/{userId}")
+	public ApiResponse<?> findSimilarUsers(@PathVariable Long userId) {
+
+		return ApiResponse.createSuccessWithMessage(reviewService.findSimilarUsers(userId),"유사한 사용자 도출되었습니다.");
+	}
 }

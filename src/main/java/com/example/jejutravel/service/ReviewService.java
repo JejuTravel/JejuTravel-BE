@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import java.util.TreeMap;
+import java.util.ArrayList;
+import jakarta.annotation.PostConstruct;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
@@ -38,6 +41,12 @@ public class ReviewService {
 
 	private final OpenAiChatModel chatClient;
 
+//	// TreeMap을 사용하여 유저의 평점을 저장
+//	private TreeMap<Long, List<Integer>> userRatingsMap = new TreeMap<>();
+	// 사용자별로 contentId와 rating(평점)을 저장하는 구조
+	// TreeMAp < userId 별로, TreeMap<contentId, rating> > 저장
+	private TreeMap<Long, TreeMap<Long, Integer>> userRatingsMap = new TreeMap<>();
+
 	@Transactional
 	public ReviewResponse save(ReviewSaveRequset reviewSaveRequset) {
 
@@ -49,6 +58,28 @@ public class ReviewService {
 		Review review = reviewSaveRequset.toEntity(user);
 		review.updateSentiment(analyzeReviewSentiment(review));
 		reviewRepository.save(review);
+
+		// 평점 데이터를 TreeMap에 추가
+		/*
+		Step 1. computeIfAbsent(userId, k -> new TreeMap<>())
+			- userRatingsMap에서 userId에 해당하는 값(사용자의 contentId와 rating으로 이루어진 TreeMap)이 있는지 확인합니다.
+			- 만약 해당 userId가 userRatingsMap에 없다면, 새로운 빈 TreeMap을 생성하고 userId를 키로 추가합니다.
+			- 만약 이미 userId가 존재한다면, 해당 userId에 매핑된 기존의 TreeMap(contentId와 rating으로 이루어진 TreeMap)을 반환합니다.
+
+		Step 2. put(review.getContentId(), review.getReviewRating())
+			- 해당 사용자의 TreeMap에 contentId와 평점을 추가합니다.
+			- contentId가 존재하지 않으면 새롭게 추가하고, 이미 존재하는 경우에는 기존 평점을 덮어씁니다.
+
+		Ex)
+		userRatingsMap = {
+			1L -> { 101L -> 5, 102L -> 3 },  // 사용자 1의 콘텐츠 평점
+			2L -> { 101L -> 4, 103L -> 2 }   // 사용자 2의 콘텐츠 평점
+		};
+		*/
+
+		// userId에 대한 TreeMap이 없다면 새로 생성하고 contentId와 평점을 추가
+		userRatingsMap.computeIfAbsent(userId, k -> new TreeMap<>())
+				.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
 
 		ReviewResponse response = new ReviewResponse(review);
 
@@ -66,6 +97,11 @@ public class ReviewService {
 		review.updateSentiment(analyzeReviewSentiment(review));
 		reviewRepository.save(review);
 
+		// update 된 평점 데이터를 TreeMap에 update
+		Long userId = review.getUser().getUserId();
+		userRatingsMap.computeIfAbsent(userId, k -> new TreeMap<>())
+				.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
+
 		ReviewResponse response = new ReviewResponse(review);
 
 		return response;
@@ -79,7 +115,21 @@ public class ReviewService {
 
 		review.updateReviewDeleteYn();
 		reviewRepository.save(review);
-	}
+
+		// TreeMap에 해당 review 삭제
+		Long userId = review.getUser().getUserId();
+		Long contentId = review.getContentId();
+
+		// TreeMap에서 해당 userId와 contentId의 rating 제거
+		if (userRatingsMap.containsKey(userId)) {
+			TreeMap<Long, Integer> contentRatings = userRatingsMap.get(userId);
+			contentRatings.remove(contentId);
+
+			// 만약 해당 userId에 더 이상 contentId가 없으면, userId 자체도 제거
+			if (contentRatings.isEmpty()) {
+				userRatingsMap.remove(userId);
+			}
+		}	}
 
 	@Transactional
 	public Page<ReviewListResponse> findByContentId(Long contentId, int pageNumber, Pageable pageable) {
@@ -179,4 +229,70 @@ public class ReviewService {
 			.map(record -> (String) record[0])
 			.collect(Collectors.toList());
 	}
+
+	// 유저 평점 기반으로 유사한 유저 찾기
+	public List<Long> findSimilarUsers(Long targetUserId) {
+		TreeMap<Long, Integer> targetRatings = userRatingsMap.get(targetUserId);
+
+		if (targetRatings == null) {
+			throw new IllegalArgumentException("해당 유저의 평점 데이터를 찾을 수 없습니다.");
+		}
+
+		// 유사도를 계산하기 위한 메소드 (단순 유클리드 거리)
+		List<Long> similarUsers = new ArrayList<>();
+		double minDistance = Double.MAX_VALUE;
+
+		for (Map.Entry<Long, TreeMap<Long, Integer>> entry : userRatingsMap.entrySet()) {
+			if (!entry.getKey().equals(targetUserId)) {
+				// 유클리드 거리 계산
+				double distance = calculateEuclideanDistance(targetRatings, entry.getValue());
+
+				// 가장 가까운 유저 찾기 (최소 거리)
+				if (distance < minDistance) {
+					minDistance = distance;
+					similarUsers.clear();
+					similarUsers.add(entry.getKey());
+				} else if (distance == minDistance) {
+					similarUsers.add(entry.getKey());
+				}
+			}
+		}
+		System.out.println(targetUserId+" is similar with "+similarUsers+". And min distance is : "+minDistance);
+		return similarUsers;
+	}
+
+	// 유클리드 거리 계산
+	private double calculateEuclideanDistance(TreeMap<Long, Integer> ratings1, TreeMap<Long, Integer> ratings2) {
+		double sum = 0.0;
+
+		// 두 사용자 모두 평가한 공통된 콘텐츠에 대해서만 계산
+		for (Map.Entry<Long, Integer> entry : ratings1.entrySet()) {
+			Long contentId = entry.getKey();
+			if (ratings2.containsKey(contentId)) {
+				sum += Math.pow(entry.getValue() - ratings2.get(contentId), 2);
+			}
+		}
+
+		return Math.sqrt(sum);  // 유클리드 거리 반환
+	}
+
+	// 애플리케이션이 시작될 때, DB에 있는 모든 리뷰 데이터를 불러와 userRatingsMap을 초기화합니다.
+	//TreeMap<Long, TreeMap<Long, Integer>> 구조로 사용자별 평점 데이터를 저장합니다.
+	@PostConstruct
+	public void initializeUserRatingsMap() {
+		List<Review> reviews = reviewRepository.findAll();
+		for (Review review : reviews) {
+			// 삭제되지 않은 리뷰만 TreeMap에 추가
+			if (!review.isReviewDeleteYn()) {
+				Long userId = review.getUser().getUserId();
+				Long contentId = review.getContentId();
+				Integer rating = review.getReviewRating();
+
+				userRatingsMap.computeIfAbsent(userId, k -> new TreeMap<>())
+						.put(contentId, rating);  // contentId와 rating 추가
+			}
+		}
+		System.out.println("PostConstruct TreeMap data : " + userRatingsMap);
+	}
+
 }
