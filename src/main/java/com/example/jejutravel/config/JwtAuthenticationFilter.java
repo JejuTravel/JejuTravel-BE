@@ -31,18 +31,21 @@ import org.slf4j.LoggerFactory;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final TokenProvider tokenProvider;
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
-
+    
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
             String accessToken = parseBearerToken(request, HttpHeaders.AUTHORIZATION);
-            User user = parseUserSpecification(accessToken);
-            AbstractAuthenticationToken authenticated = UsernamePasswordAuthenticationToken.authenticated(user,
-                    accessToken, user.getAuthorities());
 
-            authenticated.setDetails(new WebAuthenticationDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authenticated);
+            if (accessToken != null) {
+                User user = parseUserSpecification(accessToken);
+                AbstractAuthenticationToken authenticated = UsernamePasswordAuthenticationToken.authenticated(user,
+                        accessToken, user.getAuthorities());
+
+                authenticated.setDetails(new WebAuthenticationDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authenticated);
+            }
         } catch (ExpiredJwtException e) {
             reissueAccessToken(request, response, e);
         } catch (Exception e) {
@@ -50,6 +53,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             request.setAttribute("exception", e);
         }
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        // 특정 경로에서는 필터를 작동하지 않도록 설정
+        String path = request.getRequestURI();
+        return path.startsWith("/api/auth/signin") || path.startsWith("/api/auth/signup");
     }
 
     private String parseBearerToken(HttpServletRequest request, String headerName) {
