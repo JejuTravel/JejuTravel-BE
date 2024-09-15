@@ -14,12 +14,16 @@ public class ReviewSaveRequset {
 
 	private Long userId;
 	private Long contentId;
+	private Long contentTypeId;
+	private String cat3;
 	private String reviewContent;
 	private Integer reviewRating;
 
 	public ReviewSaveRequset(Review review) {
 		this.userId = review.getUser().getUserId();
 		this.contentId = review.getContentId();
+		this.contentTypeId = review.getContentTypeId();
+		this.cat3 = review.getCat3();
 		this.reviewContent = review.getReviewContent();
 		this.reviewRating = review.getReviewRating();
 	}
@@ -28,6 +32,8 @@ public class ReviewSaveRequset {
 		return Review.builder()
 			.user(user)
 			.contentId(contentId)
+			.contentTypeIdId(contentTypeId)
+			.cat3(cat3)
 			.reviewContent(reviewContent)
 			.reviewRating(reviewRating)
 			.reviewCreatedAt(new Date(System.currentTimeMillis()))

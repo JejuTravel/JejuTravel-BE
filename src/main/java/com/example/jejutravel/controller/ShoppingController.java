@@ -111,7 +111,7 @@ public class ShoppingController {
 			"&MobileOS=ETC" +
 			"&MobileApp=JejuTravel" +
 			"&contentId=" + contentId +
-			"&defaultYN=Y&firstImageYN=Y&areacodeYN=Y&addrinfoYN=Y&mapinfoYN=Y&overviewYN=Y&transGuideYN=Y" +
+			"&defaultYN=Y&firstImageYN=Y&areacodeYN=Y&addrinfoYN=Y&mapinfoYN=Y&overviewYN=Y&transGuideYN=Y&catcodeYN=Y" +
 			"&_type=json" ;
 
 		String apiUrl2 = "https://apis.data.go.kr/B551011/ChsService1/detailIntro1" +

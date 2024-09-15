@@ -10,6 +10,7 @@ public class TourismInfoResponse {
 
 	private Long contentId;
 	private Long contentTypeId;
+	private String cat3;
 	private String title;
 	private String address;
 	private Long areaCode;
@@ -31,7 +32,7 @@ public class TourismInfoResponse {
 	private String usetime;
 
 	@Builder
-	public TourismInfoResponse(String title,String address, Long areaCode, Long contentId, Long contentTypeId, String firstImage,String firstImage2,
+	public TourismInfoResponse(String title,String address, Long areaCode, Long contentId, Long contentTypeId, String cat3, String firstImage,String firstImage2,
 		String tel, String homepage, String zipcode, String overview, String directions, Long sigunguCode, String createdtime, String modifiedtime,
 		String heritage1, String infocenter, String parking, String restdate, String usetime) {
 		this.title = title;
@@ -39,6 +40,7 @@ public class TourismInfoResponse {
 		this.areaCode = areaCode ;
 		this.contentId = contentId ;
 		this.contentTypeId = contentTypeId;
+		this.cat3 = cat3;
 		this.firstImage = firstImage;
 		this.firstImage2 = firstImage2;
 		this.tel = tel ;

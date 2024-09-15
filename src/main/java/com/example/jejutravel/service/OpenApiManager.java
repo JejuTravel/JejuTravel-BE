@@ -150,7 +150,6 @@ public class OpenApiManager {
 			// XML인지 JSON인지 확인
 			// XML - 오류
 			if (responseString != null && responseString.trim().startsWith("<")) {
-				// XML parsing
 				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 				DocumentBuilder builder = factory.newDocumentBuilder();
 				Document document = builder.parse(new InputSource(new StringReader(responseString)));
@@ -380,6 +379,7 @@ public class OpenApiManager {
 			.homepage((String) item.get("homepage"))
 			.contentId(parseLong((item.get("contentid"))))
 			.contentTypeId(parseLong(item.get("contenttypeid")))
+			.cat3((String) item.get("cat3"))
 			.firstImage((String) item.get("firstimage"))
 			.firstImage2((String) item.get("firstimage2"))
 			.tel((String) item.get("tel"))
@@ -489,6 +489,7 @@ public class OpenApiManager {
 			.homepage((String) item.get("homepage"))
 			.contentId(parseLong((item.get("contentid"))))
 			.contentTypeId(parseLong(item.get("contenttypeid")))
+			.cat3((String) item.get("cat3"))
 			.firstImage((String) item.get("firstimage"))
 			.firstImage2((String) item.get("firstimage2"))
 			.tel((String) item.get("tel"))
@@ -599,6 +600,7 @@ public class OpenApiManager {
 			.homepage((String) item.get("homepage"))
 			.contentId(parseLong((item.get("contentid"))))
 			.contentTypeId(parseLong(item.get("contenttypeid")))
+			.cat3((String) item.get("cat3"))
 			.firstImage((String) item.get("firstimage"))
 			.firstImage2((String) item.get("firstimage2"))
 			.tel((String) item.get("tel"))
@@ -719,6 +721,7 @@ public class OpenApiManager {
 			.homepage((String) item.get("homepage"))
 			.contentId(parseLong((item.get("contentid"))))
 			.contentTypeId(parseLong(item.get("contenttypeid")))
+			.cat3((String) item.get("cat3"))
 			.firstImage((String) item.get("firstimage"))
 			.firstImage2((String) item.get("firstimage2"))
 			.tel((String) item.get("tel"))

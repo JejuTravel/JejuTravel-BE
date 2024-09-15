@@ -2,6 +2,7 @@ package com.example.jejutravel.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -170,5 +171,12 @@ public class ReviewService {
 		log.info("sentiment {}",sentiment);
 
 		return sentiment;
+	}
+
+	public List<String> getTop2Cat3ByUserId(Long userId) {
+		List<Object[]> result = reviewRepository.findTop2Cat3ByUserId(userId);
+		return result.stream()
+			.map(record -> (String) record[0])
+			.collect(Collectors.toList());
 	}
 }
