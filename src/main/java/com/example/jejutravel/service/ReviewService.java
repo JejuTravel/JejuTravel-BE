@@ -2,6 +2,8 @@ package com.example.jejutravel.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import java.util.TreeMap;
 import java.util.ArrayList;
 import jakarta.annotation.PostConstruct;
@@ -219,6 +221,13 @@ public class ReviewService {
 		log.info("sentiment {}",sentiment);
 
 		return sentiment;
+	}
+
+	public List<String> getTop2Cat3ByUserId(Long userId) {
+		List<Object[]> result = reviewRepository.findTop2Cat3ByUserId(userId);
+		return result.stream()
+			.map(record -> (String) record[0])
+			.collect(Collectors.toList());
 	}
 
 	// 유저 평점 기반으로 유사한 유저 찾기

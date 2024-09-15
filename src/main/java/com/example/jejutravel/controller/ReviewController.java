@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -93,6 +94,12 @@ public class ReviewController {
 
 		List<ReviewListResponse> reviews = reviewService.findByUserId(userId);
 		return ApiResponse.createSuccess(reviews);
+	}
+
+	@GetMapping("review/top2Cat3/{userId}")
+	public ResponseEntity<List<String>> getTop2Cat3(@PathVariable Long userId) {
+		List<String> top2Cat3 = reviewService.getTop2Cat3ByUserId(userId);
+		return ResponseEntity.ok(top2Cat3);
 	}
 
 	@GetMapping("/review/similarUsers/{userId}")

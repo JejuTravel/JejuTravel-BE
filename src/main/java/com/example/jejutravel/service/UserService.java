@@ -101,6 +101,7 @@ public class UserService {
         }
 
         return SignInResponse.builder()
+                .userId(user.getUserId())
                 .userName(user.getUserName())
                 .msg("로그인 성공")
                 .accessToken(accessToken)

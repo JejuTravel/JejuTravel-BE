@@ -10,6 +10,7 @@ public class ShoppingInfoResponse {
 
 	private Long contentId;
 	private Long contentTypeId;
+	private String cat3;
 	private String title;
 	private String address;
 	private Long areaCode;
@@ -32,7 +33,7 @@ public class ShoppingInfoResponse {
 	private String shopguide;
 
 	@Builder
-	public ShoppingInfoResponse(String title,String address, Long areaCode, Long contentId, Long contentTypeId, String firstImage,String firstImage2,
+	public ShoppingInfoResponse(String title,String address, Long areaCode, Long contentId, Long contentTypeId, String cat3, String firstImage,String firstImage2,
 		String tel, String homepage, String zipcode, String overview, String directions, Long sigunguCode, String createdtime, String modifiedtime,
 		String infocentershopping, String opentime, String parkingshopping, String restdateshopping, String saleitem, String shopguide) {
 		this.title = title;
@@ -40,6 +41,7 @@ public class ShoppingInfoResponse {
 		this.areaCode = areaCode ;
 		this.contentId = contentId ;
 		this.contentTypeId = contentTypeId;
+		this.cat3 = cat3;
 		this.firstImage = firstImage;
 		this.firstImage2 = firstImage2;
 		this.tel = tel ;

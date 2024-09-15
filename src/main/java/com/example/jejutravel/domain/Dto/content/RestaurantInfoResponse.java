@@ -10,6 +10,7 @@ public class RestaurantInfoResponse {
 
 	private Long contentId;
 	private Long contentTypeId;
+	private String cat3;
 	private String title;
 	private String address;
 	private Long areaCode;
@@ -35,7 +36,7 @@ public class RestaurantInfoResponse {
 	private String treatmenu;
 
 	@Builder
-	public RestaurantInfoResponse(String title,String address, Long areaCode, Long contentId, Long contentTypeId, String firstImage,String firstImage2,
+	public RestaurantInfoResponse(String title,String address, Long areaCode, Long contentId, Long contentTypeId, String cat3, String firstImage,String firstImage2,
 		String tel, String homepage, String zipcode, String overview, String directions, Long sigunguCode, String createdtime, String modifiedtime,
 		String firstmenu, String infocenterfood, String opentimefood, String parkingfood, String reservationfood, String restdatefood, String seat,
 		String smoking, String treatmenu) {
@@ -44,6 +45,7 @@ public class RestaurantInfoResponse {
 		this.areaCode = areaCode ;
 		this.contentId = contentId ;
 		this.contentTypeId = contentTypeId;
+		this.cat3 = cat3;
 		this.firstImage = firstImage;
 		this.firstImage2 = firstImage2;
 		this.tel = tel ;
