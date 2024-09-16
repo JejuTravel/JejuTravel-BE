@@ -102,9 +102,24 @@ public class ReviewController {
 		return ResponseEntity.ok(top2Cat3);
 	}
 
-	@GetMapping("/review/similarUsers/{userId}")
-	public ApiResponse<?> findSimilarUsers(@PathVariable Long userId) {
-
-		return ApiResponse.createSuccessWithMessage(reviewService.findSimilarUsers(userId),"유사한 사용자 도출되었습니다.");
+	@GetMapping("/review/similarUsers/tourism/{userId}")
+	// tourism (contentTypeId=76 ; 관광지)
+	public ApiResponse<?> findSimilarUsersTourism(@PathVariable Long userId) {
+		return ApiResponse.createSuccessWithMessage(reviewService.findSimilarUsers(userId, 76L),"유사한 사용자 도출되었습니다.");
+	}
+	@GetMapping("/review/similarUsers/shopping/{userId}")
+	// shopping (contentTypeId=79 ; 쇼핑)
+	public ApiResponse<?> findSimilarUsersShopping(@PathVariable Long userId) {
+		return ApiResponse.createSuccessWithMessage(reviewService.findSimilarUsers(userId, 79L),"유사한 사용자 도출되었습니다.");
+	}
+	@GetMapping("/review/similarUsers/stay/{userId}")
+	// stay (contentTypeId=80 ; 숙박)
+	public ApiResponse<?> findSimilarUsersStay(@PathVariable Long userId) {
+		return ApiResponse.createSuccessWithMessage(reviewService.findSimilarUsers(userId, 80L),"유사한 사용자 도출되었습니다.");
+	}
+	@GetMapping("/review/similarUsers/restaurant/{userId}")
+	// restaurant (contentTypeId=82 ; 음식점)
+	public ApiResponse<?> findSimilarUsersRestaurant(@PathVariable Long userId) {
+		return ApiResponse.createSuccessWithMessage(reviewService.findSimilarUsers(userId, 82L),"유사한 사용자 도출되었습니다.");
 	}
 }

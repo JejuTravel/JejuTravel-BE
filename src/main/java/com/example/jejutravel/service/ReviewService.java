@@ -41,11 +41,13 @@ public class ReviewService {
 
 	private final OpenAiChatModel chatClient;
 
-//	// TreeMap을 사용하여 유저의 평점을 저장
-//	private TreeMap<Long, List<Integer>> userRatingsMap = new TreeMap<>();
+	// TreeMap을 사용하여 유저의 평점을 저장
 	// 사용자별로 contentId와 rating(평점)을 저장하는 구조
-	// TreeMAp < userId 별로, TreeMap<contentId, rating> > 저장
-	private TreeMap<Long, TreeMap<Long, Integer>> userRatingsMap = new TreeMap<>();
+	// TreeMap < userId 별로, TreeMap<contentId, rating> > 저장
+	private TreeMap<Long, TreeMap<Long, Integer>> userRatingsMapTourism = new TreeMap<>();
+	private TreeMap<Long, TreeMap<Long, Integer>> userRatingsMapShopping = new TreeMap<>();
+	private TreeMap<Long, TreeMap<Long, Integer>> userRatingsMapStay = new TreeMap<>();
+	private TreeMap<Long, TreeMap<Long, Integer>> userRatingsMapRestaurant = new TreeMap<>();
 
 	@Transactional
 	public ReviewResponse save(ReviewSaveRequset reviewSaveRequset) {
@@ -76,10 +78,21 @@ public class ReviewService {
 			2L -> { 101L -> 4, 103L -> 2 }   // 사용자 2의 콘텐츠 평점
 		};
 		*/
-
+		Long contentTypeId = reviewSaveRequset.getContentTypeId();
 		// userId에 대한 TreeMap이 없다면 새로 생성하고 contentId와 평점을 추가
-		userRatingsMap.computeIfAbsent(userId, k -> new TreeMap<>())
-				.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
+		if(contentTypeId == 76) { // tourism
+			userRatingsMapTourism.computeIfAbsent(userId, k -> new TreeMap<>())
+					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
+		} else if (contentTypeId == 79) { // shopping
+			userRatingsMapShopping.computeIfAbsent(userId, k -> new TreeMap<>())
+					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
+		} else if (contentTypeId == 80) { // stay
+			userRatingsMapStay.computeIfAbsent(userId, k -> new TreeMap<>())
+					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
+		} else if (contentTypeId == 82){ // restaurant
+			userRatingsMapRestaurant.computeIfAbsent(userId, k -> new TreeMap<>())
+					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
+		}
 
 		ReviewResponse response = new ReviewResponse(review);
 
@@ -99,8 +112,21 @@ public class ReviewService {
 
 		// update 된 평점 데이터를 TreeMap에 update
 		Long userId = review.getUser().getUserId();
-		userRatingsMap.computeIfAbsent(userId, k -> new TreeMap<>())
-				.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
+		Long contentTypeId = review.getContentTypeId();
+
+		if(contentTypeId == 76) { // tourism
+			userRatingsMapTourism.computeIfAbsent(userId, k -> new TreeMap<>())
+					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
+		} else if (contentTypeId == 79) { // shopping
+			userRatingsMapShopping.computeIfAbsent(userId, k -> new TreeMap<>())
+					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
+		} else if (contentTypeId == 80) { // stay
+			userRatingsMapStay.computeIfAbsent(userId, k -> new TreeMap<>())
+					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
+		} else if (contentTypeId == 82){ // restaurant
+			userRatingsMapRestaurant.computeIfAbsent(userId, k -> new TreeMap<>())
+					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
+		}
 
 		ReviewResponse response = new ReviewResponse(review);
 
@@ -116,20 +142,35 @@ public class ReviewService {
 		review.updateReviewDeleteYn();
 		reviewRepository.save(review);
 
-		// TreeMap에 해당 review 삭제
+		// TreeMap에 해당 review 정보
 		Long userId = review.getUser().getUserId();
 		Long contentId = review.getContentId();
+		Long contentTypeId = review.getContentTypeId();
 
-		// TreeMap에서 해당 userId와 contentId의 rating 제거
-		if (userRatingsMap.containsKey(userId)) {
-			TreeMap<Long, Integer> contentRatings = userRatingsMap.get(userId);
-			contentRatings.remove(contentId);
-
-			// 만약 해당 userId에 더 이상 contentId가 없으면, userId 자체도 제거
-			if (contentRatings.isEmpty()) {
-				userRatingsMap.remove(userId);
+		if(contentTypeId == 76) { // tourism
+			// TreeMap에서 해당 userId와 contentId의 rating 제거
+			if (userRatingsMapTourism.containsKey(userId)) {
+				userRatingsMapTourism.get(userId).remove(contentId);
+				// 만약 해당 userId에 더 이상 contentId가 없으면, userId 자체도 제거
+				if (userRatingsMapTourism.get(userId).isEmpty()) { userRatingsMapTourism.remove(userId); }
 			}
-		}	}
+		} else if (contentTypeId == 79) { // shopping
+			if (userRatingsMapShopping.containsKey(userId)) {
+				userRatingsMapShopping.get(userId).remove(contentId);
+				if (userRatingsMapShopping.get(userId).isEmpty()) { userRatingsMapShopping.remove(userId); }
+			}
+		} else if (contentTypeId == 80) { // stay
+			if (userRatingsMapStay.containsKey(userId)) {
+				userRatingsMapStay.get(userId).remove(contentId);
+				if (userRatingsMapStay.get(userId).isEmpty()) { userRatingsMapStay.remove(userId); }
+			}
+		} else if (contentTypeId == 82){ // restaurant
+			if (userRatingsMapRestaurant.containsKey(userId)) {
+				userRatingsMapRestaurant.get(userId).remove(contentId);
+				if (userRatingsMapRestaurant.get(userId).isEmpty()) { userRatingsMapRestaurant.remove(userId); }
+			}
+		}
+	}
 
 	@Transactional
 	public Page<ReviewListResponse> findByContentId(Long contentId, int pageNumber, Pageable pageable) {
@@ -231,9 +272,28 @@ public class ReviewService {
 	}
 
 	// 유저 평점 기반으로 유사한 유저 찾기
-	public List<Long> findSimilarUsers(Long targetUserId) {
-		TreeMap<Long, Integer> targetRatings = userRatingsMap.get(targetUserId);
+	public List<Long> findSimilarUsers(Long targetUserId, Long contentTypeId) {
+		TreeMap<Long, TreeMap<Long, Integer>> selectedUserRatingsMap;
 
+		// contentTypeId에 따라 적절한 userRatingsMap을 선택
+		if (contentTypeId == 76) { // tourism
+			selectedUserRatingsMap = userRatingsMapTourism;
+//			System.out.println("TreeMap data for Tourism: " + userRatingsMapTourism);
+		} else if (contentTypeId == 79) { // shopping
+			selectedUserRatingsMap = userRatingsMapShopping;
+//			System.out.println("TreeMap data for Shopping: " + userRatingsMapShopping);
+		} else if (contentTypeId == 80) { // stay
+			selectedUserRatingsMap = userRatingsMapStay;
+//			System.out.println("TreeMap data for Stay: " + userRatingsMapStay);
+		}  else if (contentTypeId == 82) { // restaurant
+			selectedUserRatingsMap = userRatingsMapRestaurant;
+//			System.out.println("TreeMap data for Restaurant: " + userRatingsMapRestaurant);
+		} else {
+			throw new IllegalArgumentException("올바른 contentTypeId를 제공해야 합니다.");
+		}
+
+		// targetUserId에 해당하는 평점을 가져옴
+		TreeMap<Long, Integer> targetRatings = selectedUserRatingsMap.get(targetUserId);
 		if (targetRatings == null) {
 			throw new IllegalArgumentException("해당 유저의 평점 데이터를 찾을 수 없습니다.");
 		}
@@ -242,9 +302,9 @@ public class ReviewService {
 		List<Long> similarUsers = new ArrayList<>();
 		double minDistance = Double.MAX_VALUE;
 
-		for (Map.Entry<Long, TreeMap<Long, Integer>> entry : userRatingsMap.entrySet()) {
-			if (!entry.getKey().equals(targetUserId)) {
-				// 유클리드 거리 계산
+		for (Map.Entry<Long, TreeMap<Long, Integer>> entry : selectedUserRatingsMap.entrySet()) { // 순회하면서 다른 사용자들과의 평점을 비교
+			if (!entry.getKey().equals(targetUserId)) { // 자신과의 비교는 필요 없으므로 targetUserId는 제외하고 진행
+				// 공통된 콘텐츠에 대한 유클리드 거리 계산
 				double distance = calculateEuclideanDistance(targetRatings, entry.getValue());
 
 				// 가장 가까운 유저 찾기 (최소 거리)
@@ -257,7 +317,7 @@ public class ReviewService {
 				}
 			}
 		}
-		System.out.println(targetUserId+" is similar with "+similarUsers+". And min distance is : "+minDistance);
+//		System.out.println(targetUserId+" is similar with "+similarUsers+". And min distance is : "+minDistance);
 		return similarUsers;
 	}
 
@@ -287,12 +347,28 @@ public class ReviewService {
 				Long userId = review.getUser().getUserId();
 				Long contentId = review.getContentId();
 				Integer rating = review.getReviewRating();
+				Long contentTypeId = review.getContentTypeId();
 
-				userRatingsMap.computeIfAbsent(userId, k -> new TreeMap<>())
-						.put(contentId, rating);  // contentId와 rating 추가
+				// contentTypeId에 따라 적절한 userRatingsMap에 데이터 저장
+				if (contentTypeId == 76) { // tourism
+					userRatingsMapTourism.computeIfAbsent(userId, k -> new TreeMap<>())
+							.put(contentId, rating);
+				} else if (contentTypeId == 79) { // shopping
+					userRatingsMapShopping.computeIfAbsent(userId, k -> new TreeMap<>())
+							.put(contentId, rating);
+				} else if (contentTypeId == 80) { // stay
+					userRatingsMapStay.computeIfAbsent(userId, k -> new TreeMap<>())
+							.put(contentId, rating);
+				} else if (contentTypeId == 82) { // restaurant
+					userRatingsMapRestaurant.computeIfAbsent(userId, k -> new TreeMap<>())
+							.put(contentId, rating);
+				}
 			}
 		}
-		System.out.println("PostConstruct TreeMap data : " + userRatingsMap);
+//		System.out.println("PostConstruct TreeMap data for Tourism: " + userRatingsMapTourism);
+//		System.out.println("PostConstruct TreeMap data for Shopping: " + userRatingsMapShopping);
+//		System.out.println("PostConstruct TreeMap data for Stay: " + userRatingsMapStay);
+//		System.out.println("PostConstruct TreeMap data for Restaurant: " + userRatingsMapRestaurant);
 	}
 
 }
