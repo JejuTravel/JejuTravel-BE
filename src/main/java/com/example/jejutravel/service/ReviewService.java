@@ -1,11 +1,8 @@
 package com.example.jejutravel.service;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import java.util.TreeMap;
-import java.util.ArrayList;
 import jakarta.annotation.PostConstruct;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -17,6 +14,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.example.jejutravel.domain.Dto.review.ReviewListResponse;
 import com.example.jejutravel.domain.Dto.review.ReviewResponse;
@@ -78,21 +78,11 @@ public class ReviewService {
 			2L -> { 101L -> 4, 103L -> 2 }   // 사용자 2의 콘텐츠 평점
 		};
 		*/
-		Long contentTypeId = reviewSaveRequset.getContentTypeId();
-		// userId에 대한 TreeMap이 없다면 새로 생성하고 contentId와 평점을 추가
-		if(contentTypeId == 76) { // tourism
-			userRatingsMapTourism.computeIfAbsent(userId, k -> new TreeMap<>())
-					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
-		} else if (contentTypeId == 79) { // shopping
-			userRatingsMapShopping.computeIfAbsent(userId, k -> new TreeMap<>())
-					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
-		} else if (contentTypeId == 80) { // stay
-			userRatingsMapStay.computeIfAbsent(userId, k -> new TreeMap<>())
-					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
-		} else if (contentTypeId == 82){ // restaurant
-			userRatingsMapRestaurant.computeIfAbsent(userId, k -> new TreeMap<>())
-					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
-		}
+		// contentTypeId에 따른 TreeMap 가져오기
+		TreeMap<Long, TreeMap<Long, Integer>> selectedUserRatingsMap = getUserRatingsMap(reviewSaveRequset.getContentTypeId());
+		// 해당 userId에 대한 TreeMap이 없다면 새로 생성하고 contentId와 평점을 추가
+		selectedUserRatingsMap.computeIfAbsent(userId, k -> new TreeMap<>())
+				.put(review.getContentId(), review.getReviewRating()); // contentId와 rating(평점) 추가
 
 		ReviewResponse response = new ReviewResponse(review);
 
@@ -110,23 +100,11 @@ public class ReviewService {
 		review.updateSentiment(analyzeReviewSentiment(review));
 		reviewRepository.save(review);
 
-		// update 된 평점 데이터를 TreeMap에 update
-		Long userId = review.getUser().getUserId();
-		Long contentTypeId = review.getContentTypeId();
-
-		if(contentTypeId == 76) { // tourism
-			userRatingsMapTourism.computeIfAbsent(userId, k -> new TreeMap<>())
-					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
-		} else if (contentTypeId == 79) { // shopping
-			userRatingsMapShopping.computeIfAbsent(userId, k -> new TreeMap<>())
-					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
-		} else if (contentTypeId == 80) { // stay
-			userRatingsMapStay.computeIfAbsent(userId, k -> new TreeMap<>())
-					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
-		} else if (contentTypeId == 82){ // restaurant
-			userRatingsMapRestaurant.computeIfAbsent(userId, k -> new TreeMap<>())
-					.put(review.getContentId(), review.getReviewRating());  // contentId와 rating(평점) 추가
-		}
+		// contentTypeId에 따른 TreeMap 가져오기
+		TreeMap<Long, TreeMap<Long, Integer>> selectedUserRatingsMap = getUserRatingsMap(review.getContentTypeId());
+		// 해당 userId에 대한 TreeMap이 없다면 새로 생성하고 contentId와 평점을 업데이트
+		selectedUserRatingsMap.computeIfAbsent(review.getUser().getUserId(), k -> new TreeMap<>())
+				.put(review.getContentId(), review.getReviewRating());
 
 		ReviewResponse response = new ReviewResponse(review);
 
@@ -145,29 +123,15 @@ public class ReviewService {
 		// TreeMap에 해당 review 정보
 		Long userId = review.getUser().getUserId();
 		Long contentId = review.getContentId();
-		Long contentTypeId = review.getContentTypeId();
 
-		if(contentTypeId == 76) { // tourism
-			// TreeMap에서 해당 userId와 contentId의 rating 제거
-			if (userRatingsMapTourism.containsKey(userId)) {
-				userRatingsMapTourism.get(userId).remove(contentId);
-				// 만약 해당 userId에 더 이상 contentId가 없으면, userId 자체도 제거
-				if (userRatingsMapTourism.get(userId).isEmpty()) { userRatingsMapTourism.remove(userId); }
-			}
-		} else if (contentTypeId == 79) { // shopping
-			if (userRatingsMapShopping.containsKey(userId)) {
-				userRatingsMapShopping.get(userId).remove(contentId);
-				if (userRatingsMapShopping.get(userId).isEmpty()) { userRatingsMapShopping.remove(userId); }
-			}
-		} else if (contentTypeId == 80) { // stay
-			if (userRatingsMapStay.containsKey(userId)) {
-				userRatingsMapStay.get(userId).remove(contentId);
-				if (userRatingsMapStay.get(userId).isEmpty()) { userRatingsMapStay.remove(userId); }
-			}
-		} else if (contentTypeId == 82){ // restaurant
-			if (userRatingsMapRestaurant.containsKey(userId)) {
-				userRatingsMapRestaurant.get(userId).remove(contentId);
-				if (userRatingsMapRestaurant.get(userId).isEmpty()) { userRatingsMapRestaurant.remove(userId); }
+		// contentTypeId에 따른 TreeMap 가져오기
+		TreeMap<Long, TreeMap<Long, Integer>> selectedUserRatingsMap = getUserRatingsMap(review.getContentTypeId());
+		// TreeMap에서 해당 userId와 contentId의 rating 제거
+		if (selectedUserRatingsMap.containsKey(userId)) {
+			selectedUserRatingsMap.get(userId).remove(contentId);
+			// 만약 해당 userId에 더 이상 contentId가 없으면, userId 자체도 제거
+			if (selectedUserRatingsMap.get(userId).isEmpty()) {
+				selectedUserRatingsMap.remove(userId);
 			}
 		}
 	}
@@ -273,24 +237,9 @@ public class ReviewService {
 
 	// 유저 평점 기반으로 유사한 유저 찾기
 	public List<Long> findSimilarUsers(Long targetUserId, Long contentTypeId) {
-		TreeMap<Long, TreeMap<Long, Integer>> selectedUserRatingsMap;
 
-		// contentTypeId에 따라 적절한 userRatingsMap을 선택
-		if (contentTypeId == 76) { // tourism
-			selectedUserRatingsMap = userRatingsMapTourism;
-//			System.out.println("TreeMap data for Tourism: " + userRatingsMapTourism);
-		} else if (contentTypeId == 79) { // shopping
-			selectedUserRatingsMap = userRatingsMapShopping;
-//			System.out.println("TreeMap data for Shopping: " + userRatingsMapShopping);
-		} else if (contentTypeId == 80) { // stay
-			selectedUserRatingsMap = userRatingsMapStay;
-//			System.out.println("TreeMap data for Stay: " + userRatingsMapStay);
-		}  else if (contentTypeId == 82) { // restaurant
-			selectedUserRatingsMap = userRatingsMapRestaurant;
-//			System.out.println("TreeMap data for Restaurant: " + userRatingsMapRestaurant);
-		} else {
-			throw new IllegalArgumentException("올바른 contentTypeId를 제공해야 합니다.");
-		}
+		// contentTypeId에 따른 TreeMap 가져오기
+		TreeMap<Long, TreeMap<Long, Integer>> selectedUserRatingsMap = getUserRatingsMap(contentTypeId);
 
 		// targetUserId에 해당하는 평점을 가져옴
 		TreeMap<Long, Integer> targetRatings = selectedUserRatingsMap.get(targetUserId);
@@ -334,6 +283,89 @@ public class ReviewService {
 		}
 
 		return Math.sqrt(sum);  // 유클리드 거리 반환
+	}
+
+public Set<Long> findRecommendedContentIds(Long targetUserId, Long contentTypeId) {
+	// 유사한 사용자 목록 도출
+	List<Long> similarUserIds = findSimilarUsers(targetUserId, contentTypeId);
+
+	// 선택한 contentTypeId에 맞는 TreeMap 선택
+	TreeMap<Long, TreeMap<Long, Integer>> selectedUserRatingsMap = getUserRatingsMap(contentTypeId);
+
+	// targetUserId가 리뷰한 contentId 목록 가져오기
+	TreeMap<Long, Integer> targetUserRatings = selectedUserRatingsMap.get(targetUserId);
+	Set<Long> targetReviewedContentIds = (targetUserRatings != null) ? targetUserRatings.keySet() : new HashSet<>();
+
+	// 유사한 사용자가 리뷰한 contentId 중, 평점이 3점 이상이고 sentiment가 positive인, targetUser가 리뷰하지 않은 contentId 도출
+	Set<Long> recommendedContentIds = new HashSet<>();
+	for (Long similarUserId : similarUserIds) {
+		TreeMap<Long, Integer> similarUserRatings = selectedUserRatingsMap.get(similarUserId);
+		if (similarUserRatings != null) {
+			for (Long contentId : similarUserRatings.keySet()) {
+				Integer rating = similarUserRatings.get(contentId);
+
+				// 리뷰 객체에서 평점과 감정 상태 확인
+				Review review = reviewRepository.findByUserIdAndContentId(similarUserId, contentId);
+				if (review != null && rating >= 3 && review.getSentiment().equals("positive")) {
+					if (!targetReviewedContentIds.contains(contentId)) {
+						recommendedContentIds.add(contentId);  // 추천할 contentId 추가
+					}
+				}
+			}
+		}
+	}
+
+	return recommendedContentIds;
+}
+
+	// contentTypeId에 따라 적절한 userRatingsMap을 선택하는 메서드
+	private TreeMap<Long, TreeMap<Long, Integer>> getUserRatingsMap(Long contentTypeId) {
+		if (contentTypeId == 76) { // tourism
+			return userRatingsMapTourism;
+		} else if (contentTypeId == 79) { // shopping
+			return userRatingsMapShopping;
+		} else if (contentTypeId == 80) { // stay
+			return userRatingsMapStay;
+		} else if (contentTypeId == 82) { // restaurant
+			return userRatingsMapRestaurant;
+		} else {
+			throw new IllegalArgumentException("올바른 contentTypeId를 제공해야 합니다.");
+		}
+	}
+
+	public List<Map<String, Object>> getInfoForContentIds(List<Long> contentIds, Long contentTypeId) {
+		RestTemplate restTemplate = new RestTemplate();
+		List<Map<String, Object>> infoResponses = new ArrayList<>();
+
+		String endpoint;
+		if (contentTypeId == 79L) {
+			endpoint = "/shopping/info/";
+		} else if (contentTypeId == 76L) {
+			endpoint = "/tourism/info/";
+		} else if (contentTypeId == 80L) {
+			endpoint = "/stay/info/";
+		} else if (contentTypeId == 82L) {
+			endpoint = "/restaurant/info/";
+		} else {
+			throw new IllegalArgumentException("올바른 contentTypeId를 제공해야 합니다.");
+		}
+
+		for (Long contentId : contentIds) {
+			String apiUrl = "http://localhost:8080/api/v1" + endpoint + contentId;
+			ResponseEntity<String> response = restTemplate.getForEntity(apiUrl, String.class);
+
+			if (response.getBody() != null) {
+				ObjectMapper mapper = new ObjectMapper();
+				try {
+					Map<String, Object> result = mapper.readValue(response.getBody(), Map.class);
+					infoResponses.add(result);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return infoResponses;
 	}
 
 	// 애플리케이션이 시작될 때, DB에 있는 모든 리뷰 데이터를 불러와 userRatingsMap을 초기화합니다.
