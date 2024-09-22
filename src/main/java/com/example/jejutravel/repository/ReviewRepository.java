@@ -34,4 +34,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 		"GROUP BY r.cat3 " +
 		"ORDER BY count DESC")
 	List<Object[]> findTop2Cat3ByUserId(@Param("userId") Long userId);
+
+	@Query("select r from Review r where r.user.userId = :userId and r.contentId = :contentId and r.reviewDeleteYn = false")
+	Review findByUserIdAndContentId(@Param("userId") Long userId, @Param("contentId") Long contentId);
+
 }
