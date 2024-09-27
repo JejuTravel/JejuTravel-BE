@@ -12,7 +12,7 @@ public class PythonTranslator {
         try {
             // 텍스트를 UTF-8로 인코딩하여 파이썬에 전달
             String utf8Text = new String(text.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
-            ProcessBuilder pb = new ProcessBuilder("python", "src/main/resources/translator.py", utf8Text, src, dest);
+            ProcessBuilder pb = new ProcessBuilder("python3", "/app/src/main/resources/translator.py", utf8Text, src, dest);
             pb.environment().put("PYTHONIOENCODING", "UTF-8");
 
             pb.redirectErrorStream(true);
