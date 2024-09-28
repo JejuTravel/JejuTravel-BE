@@ -60,4 +60,14 @@ public class UserController {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body((ApiResponse<String>) ApiResponse.createError(response));
     }
+
+    @GetMapping("/kakao/signin")
+    public ResponseEntity<?> kakaoSignIn(@RequestParam String code) {
+        System.out.println("Kakao SignIn endpoint hit with code: " + code);
+        SignInResponse response = userService.kakaoSignIn(code);
+        if (response.getMsg().equals("카카오 로그인 성공")) {
+            return ResponseEntity.ok(ApiResponse.createSuccess(response));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.createError(response.getMsg()));
+    }
 }
