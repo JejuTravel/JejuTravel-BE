@@ -185,6 +185,7 @@ public class UserService {
                 .msg("카카오 로그인 성공")
                 .accessToken(accessTokenJwt)
                 .refreshToken(refreshTokenJwt)
+                .kakaoAccessToken(accessToken)
                 .build();
     }
 
