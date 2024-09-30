@@ -5,8 +5,10 @@ import com.example.jejutravel.domain.Dto.SignInRequest;
 import com.example.jejutravel.domain.Dto.SignInResponse;
 import com.example.jejutravel.domain.Dto.SignUpRequest;
 import com.example.jejutravel.domain.Dto.SignUpResponse;
+import com.example.jejutravel.domain.Entity.KakaoUser;
 import com.example.jejutravel.domain.Entity.RefreshToken;
 import com.example.jejutravel.domain.Entity.User;
+import com.example.jejutravel.repository.KakaoUserRepository;
 import com.example.jejutravel.repository.RefreshTokenRepository;
 import com.example.jejutravel.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.example.jejutravel.service.kakaoService;
 
 import java.sql.Date;
 import java.util.Optional;
@@ -25,8 +28,10 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final KakaoUserRepository kakaoUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
+    private final kakaoService kakaoService;
 
     @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
@@ -128,4 +133,60 @@ public class UserService {
         String passwordPattern = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,16}$";
         return Pattern.matches(passwordPattern, password);
     }
+
+    @Transactional
+    public SignInResponse kakaoSignIn(String code) {
+        System.out.println("Received Kakao code: " + code);
+
+        // 카카오 인증 코드를 사용하여 액세스 토큰을 얻음
+        String accessToken = kakaoService.getKakaoAccessToken(code);
+        if (accessToken == null || accessToken.isEmpty()) {
+            throw new RuntimeException("카카오 인증 코드가 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.");
+        }
+        System.out.println("Received Kakao access token: " + accessToken);
+
+        // 카카오 유저 정보를 저장 또는 업데이트
+        KakaoUser kakaoUser = kakaoService.saveOrUpdateKakaoUser(accessToken);
+        if (kakaoUser == null) {
+            throw new RuntimeException("카카오 사용자 정보를 가져오는 데 실패했습니다.");
+        }
+        System.out.println("Kakao user retrieved or updated: " + kakaoUser);
+
+        User user = kakaoUser.getUser();
+        if (user == null) {
+            throw new RuntimeException("해당 카카오 사용자에 대한 유저 정보가 없습니다.");
+        }
+        System.out.println("User associated with Kakao user: " + user);
+
+        // User 객체를 기반으로 토큰을 생성
+        String accessTokenJwt = tokenProvider.createToken(user);
+        String refreshTokenJwt = tokenProvider.createRefreshToken();
+        System.out.println("Generated JWT access token: " + accessTokenJwt + ", refresh token: " + refreshTokenJwt);
+
+        // Refresh Token 저장
+        Optional<RefreshToken> oldRefreshToken = refreshTokenRepository.findById(user.getUserId());
+        if (oldRefreshToken.isEmpty()) {
+            RefreshToken newRefreshToken = RefreshToken.builder()
+                    .tokenId(user.getUserId())
+                    .refreshToken(refreshTokenJwt)
+                    .User(user)
+                    .build();
+            refreshTokenRepository.save(newRefreshToken);
+        } else {
+            RefreshToken newRefreshToken = oldRefreshToken.get().toBuilder()
+                    .refreshToken(refreshTokenJwt)
+                    .build();
+            refreshTokenRepository.save(newRefreshToken);
+        }
+
+        return SignInResponse.builder()
+                .userId(user.getUserId())
+                .userName(user.getUserName())
+                .msg("카카오 로그인 성공")
+                .accessToken(accessTokenJwt)
+                .refreshToken(refreshTokenJwt)
+                .kakaoAccessToken(accessToken)
+                .build();
+    }
+
 }
