@@ -28,7 +28,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationEntryPoint entryPoint;
 
-    private final String[] allowedUrls = { "/api/auth/signin", "/api/auth/signup" }; // 허용할 URL 목록
+    private final String[] allowedUrls = { "/api/auth/signin", "/api/auth/signup", "/api/auth/kakao/signin","/api/v1/**" }; // 허용할 URL 목록
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
