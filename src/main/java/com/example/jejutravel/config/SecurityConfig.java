@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -27,7 +28,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationEntryPoint entryPoint;
 
-    private final String[] allowedUrls = {}; // 허용할 url 목록
+    private final String[] allowedUrls = { "/api/auth/signin", "/api/auth/signup", "/api/auth/kakao/signin","/api/v1/**" }; // 허용할 URL 목록
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -47,9 +48,8 @@ public class SecurityConfig {
                 }))
                 .csrf(CsrfConfigurer<HttpSecurity>::disable)
                 .headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin))
-                .authorizeHttpRequests(requests -> requests.requestMatchers(allowedUrls).permitAll() // requestMatchers의
-                                                                                                     // 인자로 전달된 url은
-                                                                                                     // 모두에게 허용
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers(allowedUrls).permitAll() // 허용된 URL 목록에 대한 요청은 모두 허용
                         .anyRequest().authenticated() // 그 외의 모든 요청은 인증 필요
                 )
                 .sessionManagement(
@@ -62,9 +62,11 @@ public class SecurityConfig {
                 .exceptionHandling(handler -> handler.authenticationEntryPoint(entryPoint))
                 .build();
     }
+    
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+    
 }

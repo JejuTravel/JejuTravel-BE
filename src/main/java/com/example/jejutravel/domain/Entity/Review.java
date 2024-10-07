@@ -38,6 +38,12 @@ public class Review {
 	@Column(name = "content_id", nullable = false)
 	private Long contentId;
 
+	@Column(name = "content_type_id", nullable = false)
+	private Long contentTypeId;
+
+	@Column(name = "cat3", nullable = false)
+	private String cat3;
+
 	@Column(name = "review_content")
 	private String reviewContent;
 
@@ -53,16 +59,21 @@ public class Review {
 	@Column(name = "review_delete_yn", nullable = false, columnDefinition = "boolean default false")
 	private boolean reviewDeleteYn;
 
+	@Column(name = "review_sentiment")
+	private String sentiment;
 
 	@Builder
-	public Review(User user, Long contentId, String reviewContent, Integer reviewRating, Date reviewCreatedAt, Date reviewUpdatedAt, boolean reviewDeleteYn) {
+	public Review(User user, Long contentId, Long contentTypeIdId, String cat3, String reviewContent, Integer reviewRating, Date reviewCreatedAt, Date reviewUpdatedAt, boolean reviewDeleteYn, String sentiment) {
 		this.user = user;
 		this.contentId = contentId;
+		this.contentTypeId = contentTypeIdId;
+		this.cat3 = cat3;
 		this.reviewContent = reviewContent;
 		this.reviewRating = reviewRating;
 		this.reviewCreatedAt = reviewCreatedAt;
 		this.reviewUpdatedAt = reviewUpdatedAt;
 		this.reviewDeleteYn = reviewDeleteYn;
+		this.sentiment = sentiment;
 	}
 
 	public void updateReview(ReviewUpdateRequest request) {
@@ -73,5 +84,9 @@ public class Review {
 
 	public void updateReviewDeleteYn() {
 		this.reviewDeleteYn = true;
+	}
+
+	public void updateSentiment(String sentiment) {
+		this.sentiment = sentiment;
 	}
 }

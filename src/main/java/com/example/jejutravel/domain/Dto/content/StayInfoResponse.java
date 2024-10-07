@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 public class StayInfoResponse {
 	private Long contentId;
 	private Long contentTypeId;
+	private String cat3;
 	private String title;
 	private String address;
 	private Long areaCode;
@@ -41,7 +42,7 @@ public class StayInfoResponse {
 	private String subfacility;
 
 	@Builder
-	public StayInfoResponse(String title,String address, Long areaCode, Long contentId, Long contentTypeId, String firstImage,String firstImage2,
+	public StayInfoResponse(String title,String address, Long areaCode, Long contentId, Long contentTypeId, String cat3, String firstImage,String firstImage2,
 		String tel, String homepage, String zipcode, String overview, String directions, Long sigunguCode, String createdtime, String modifiedtime,
 		String accomcountlodging, String benikia, String goodstay, String hanok, String checkintime, String checkouttime, String foodplace,
 		String infocenterlodging, String parkinglodging, String pickup, String roomcount, String reservationlodging, String reservationurl,
@@ -51,6 +52,7 @@ public class StayInfoResponse {
 		this.areaCode = areaCode ;
 		this.contentId = contentId ;
 		this.contentTypeId = contentTypeId;
+		this.cat3 = cat3;
 		this.firstImage = firstImage;
 		this.firstImage2 = firstImage2;
 		this.tel = tel ;
