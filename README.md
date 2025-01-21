@@ -43,7 +43,7 @@ $ npm run dev
 |:------:|:------:|:------:|:------:|:------:|
 | <img src="https://avatars.githubusercontent.com/u/59240554?v=4" alt="김민" width="150"> | <img src="https://avatars.githubusercontent.com/u/107786171?v=4" alt="김현지" width="150"> | <img src="https://avatars.githubusercontent.com/u/85014114?v=4" alt="김혜연" width="150"> | <img src="https://avatars.githubusercontent.com/u/173883601?v=4" alt="방재경" width="150"> |<img src="https://avatars.githubusercontent.com/u/118799810?v=4" alt="방채원" width="150"> |
 | PL, BE | FE | BE | FE | BE |
-| [GitHub](https://github.com/doraemon49) | [GitHub](https://github.com/LOCAL-HJ) | [GitHub](https://github.com/KimHyeyeonn) | [GitHub](https://github.com/Jae-kyoung) |[GitHub](https://github.com/Jae-kyoung) |
+| [GitHub](https://github.com/doraemon49) | [GitHub](https://github.com/LOCAL-HJ) | [GitHub](https://github.com/KimHyeyeonn) | [GitHub](https://github.com/Jae-kyoung) |[GitHub](https://github.com/chaewon02) |
 
 <br/>
 <br/>
